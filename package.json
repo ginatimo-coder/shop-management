@@ -1,0 +1,41 @@
+const express = require('express');
+const { Pool } = require('pg');
+const cors = require('cors');
+const path = require('path');
+
+const app = express();
+
+// Middleware
+app.use(express.json());
+app.use(cors());
+
+// Servir vos fichiers HTML, CSS statiques situés à la racine du projet
+app.use(express.static(path.join(__dirname)));
+
+// Connexion sécurisée à PostgreSQL via Railway
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false } // Indispensable pour les connexions cloud vers Postgres
+});
+
+// Route de test de la base de données
+app.get('/api/test-db', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT NOW()');
+    res.json({ message: "Connexion à PostgreSQL réussie !", time: result.rows[0].now });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erreur de connexion à la base de données" });
+  }
+});
+
+// Route par défaut qui renvoie vers votre page de connexion ou d'accueil
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+// Utilisation du port dynamique fourni par Railway (obligatoire pour le cloud)
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Serveur démarré et à l'écoute sur le port ${PORT}`);
+});
