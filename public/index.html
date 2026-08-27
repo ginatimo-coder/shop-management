@@ -3,46 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Caisse & Gestion de Stock - Tableau de Bord</title>
+    <title id="pageTitle">Caisse & Gestion de Pièces</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f9; color: #333; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        h2 { border-bottom: 2px solid #ddd; padding-bottom: 5px; color: #0066cc; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ddd; padding-bottom: 5px; margin-bottom: 15px; }
+        h2 { color: #0066cc; margin: 0; border: none; padding: 0; }
         .form-group { margin-bottom: 15px; }
+        .form-row { display: flex; gap: 10px; }
+        .form-row .form-group { flex: 1; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
         input, select { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
         button { background: #0066cc; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; }
         button:hover { background: #004999; }
         button.success { background: #28a745; }
         button.success:hover { background: #218838; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
         th { background: #f8f9fa; }
 
-        /* Styles pour le tableau de bord */
-        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 15px; }
+        /* Dashboard Styles */
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
         .card { background: linear-gradient(135deg, #0066cc, #004999); color: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .card.alert { background: linear-gradient(135deg, #dc3545, #a71d2a); }
-        .card h3 { margin: 0 0 10px 0; font-size: 13px; text-transform: uppercase; opacity: 0.9; border: none; padding: 0; color: white; }
+        .card h3 { margin: 0 0 10px 0; font-size: 13px; text-transform: uppercase; opacity: 0.9; color: white; }
         .card .value { font-size: 22px; font-weight: bold; }
 
-        /* Style caché pour l'impression du ticket thermique 58mm */
+        /* Imprimante thermique 58mm */
         #ticket-print { display: none; }
-
         @media print {
             body * { visibility: hidden; }
             #ticket-print, #ticket-print * { visibility: visible; }
             #ticket-print {
                 display: block;
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 58mm;
-                font-family: 'Courier New', Courier, monospace;
-                font-size: 12px;
-                padding: 5px;
-                background: white;
-                color: black;
+                position: absolute; left: 0; top: 0; width: 58mm;
+                font-family: 'Courier New', Courier, monospace; font-size: 12px; padding: 5px; background: white; color: black;
             }
             .ticket-center { text-align: center; }
             .ticket-line { border-bottom: 1px dashed #000; margin: 5px 0; }
@@ -53,194 +48,333 @@
 <body>
 
 <div class="container">
-    <h2>📊 Tableau de Bord de la Caisse</h2>
+    <div class="header-flex">
+        <h2 id="titleDashboard">📊 Tableau de Bord</h2>
+        <div>
+            <select id="langSelect" onchange="switchLanguage(this.value)" style="padding: 5px; font-weight: bold;">
+                <option value="fr">🇫🇷 Français</option>
+                <option value="en">🇬🇧 English</option>
+            </select>
+        </div>
+    </div>
     <div class="dashboard-grid">
         <div class="card">
-            <h3>CA du Jour</h3>
+            <h3 id="lblTodaySales">CA du Jour</h3>
             <div class="value" id="statTodaySales">0.00</div>
         </div>
         <div class="card">
-            <h3>Ventes du Jour</h3>
+            <h3><span id="lblSalesCount">Ventes du Jour</span></h3>
             <div class="value" id="statSalesCount">0</div>
         </div>
         <div class="card">
-            <h3>Valeur du Stock</h3>
+            <h3 id="lblStockValue">Valeur du Stock</h3>
             <div class="value" id="statStockValue">0.00</div>
         </div>
-        <div class="card alert" id="cardAlert">
-            <h3>Ruptures de stock</h3>
-            <div class="value" id="statOutOfStock">0</div>
+        <div class="card alert">
+            <h3 id="lblLowStock">Alertes Stock</h3>
+            <div class="value" id="statLowStock">0</div>
         </div>
     </div>
 </div>
 
 <div class="container">
-    <h2>🏷️ Gestion des Catégories</h2>
+    <h2 id="titleCategory">🏷️ Gestion des Catégories</h2>
     <form id="categoryForm">
         <div class="form-group">
-            <label>Nom de la nouvelle catégorie :</label>
+            <label id="lblCatName">Nom de la catégorie :</label>
             <input type="text" id="categoryName" required>
         </div>
-        <button type="submit">Ajouter la catégorie</button>
+        <button type="submit" id="btnSaveCat">Ajouter la catégorie</button>
     </form>
 </div>
 
 <div class="container">
-    <h2>📦 Ajouter un Produit</h2>
-    <form id="productForm">
-        <div class="form-group">
-            <label>Code-barres :</label>
-            <input type="text" id="barcode" placeholder="Scanner ou saisir le code-barres">
+    <h2 id="titlePart">📦 Ajouter une Pièce / Article</h2>
+    <form id="partForm">
+        <div class="form-row">
+            <div class="form-group">
+                <label id="lblSku">SKU / Code-barres :</label>
+                <input type="text" id="sku" required>
+            </div>
+            <div class="form-group">
+                <label id="lblPartName">Nom de la pièce :</label>
+                <input type="text" id="partName" required>
+            </div>
         </div>
-        <div class="form-group">
-            <label>Nom du produit :</label>
-            <input type="text" id="name" required>
+        <div class="form-row">
+            <div class="form-group">
+                <label id="lblCategory">Catégorie :</label>
+                <select id="partCategorySelect">
+                    <option value="">-- Sélectionner --</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label id="lblBrandPart">Marque (ex: Bosch, Valeo) :</label>
+                <input type="text" id="brandPart">
+            </div>
         </div>
-        <div class="form-group">
-            <label>Catégorie :</label>
-            <select id="productCategorySelect">
-                <option value="">-- Aucune catégorie --</option>
-            </select>
+        <div class="form-row">
+            <div class="form-group">
+                <label id="lblPartNumber">Référence Fabricant :</label>
+                <input type="text" id="partNumber" required>
+            </div>
+            <div class="form-group">
+                <label id="lblLocation">Emplacement (ex: Allée 3) :</label>
+                <input type="text" id="location">
+            </div>
         </div>
-        <div class="form-group">
-            <label>Prix unitaire :</label>
-            <input type="number" step="0.01" id="price" required>
+        <div class="form-row">
+            <div class="form-group">
+                <label id="lblBuyPrice">Prix d'achat :</label>
+                <input type="number" step="0.01" id="purchasePrice" required>
+            </div>
+            <div class="form-group">
+                <label id="lblSalePrice">Prix de vente :</label>
+                <input type="number" step="0.01" id="salePrice" required>
+            </div>
         </div>
-        <div class="form-group">
-            <label>Quantité en stock :</label>
-            <input type="number" id="stock_quantity" required>
+        <div class="form-row">
+            <div class="form-group">
+                <label id="lblStockQty">Quantité en stock :</label>
+                <input type="number" id="stockQuantity" required>
+            </div>
+            <div class="form-group">
+                <label id="lblMinAlert">Seuil d'alerte stock :</label>
+                <input type="number" id="minStockAlert" value="5" required>
+            </div>
         </div>
-        <button type="submit">Enregistrer le produit</button>
+        <button type="submit" id="btnSavePart">Enregistrer la pièce</button>
     </form>
 </div>
 
 <div class="container">
-    <h2>🛒 Enregistrer une Vente (Caisse)</h2>
+    <h2 id="titleSale">🛒 Caisse & Enregistrement de Vente</h2>
     <form id="saleForm">
-        <div class="form-group">
-            <label>Scanner / Entrer le code-barres pour vendre :</label>
-            <input type="text" id="saleBarcodeScan" placeholder="Scannez ici pour ajouter directement au panier...">
+        <div class="form-row">
+            <div class="form-group">
+                <label id="lblSelectPart">Sélectionner la pièce :</label>
+                <select id="salePartSelect" required>
+                    <option value="">-- Choisir une pièce --</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label id="lblSaleQty">Quantité :</label>
+                <input type="number" id="saleQuantity" value="1" min="1" required>
+            </div>
         </div>
-        <div class="form-group">
-            <label>Ou Sélectionner le produit :</label>
-            <select id="saleProductSelect">
-                <option value="">-- Choisir un produit --</option>
-            </select>
+        <div class="form-row">
+            <div class="form-group">
+                <label id="lblPaymentMethod">Mode de paiement :</label>
+                <select id="paymentMethod">
+                    <option value="especes">Espèces / Cash</option>
+                    <option value="carte">Carte bancaire / Card</option>
+                    <option value="mobile_money">Mobile Money</option>
+                    <option value="credit">Crédit / Credit</option>
+                    <option value="autre">Autre / Other</option>
+                </select>
+            </div>
         </div>
-        <div class="form-group">
-            <label>Quantité vendue :</label>
-            <input type="number" id="saleQuantity" value="1" min="1" required>
-        </div>
-        <button type="submit" class="success">Valider la Vente & Imprimer le Ticket</button>
+        <button type="submit" class="success" id="btnValidateSale">Valider la Vente & Imprimer le Ticket</button>
     </form>
 </div>
 
 <div class="container">
-    <h2>📋 Liste du Stock en Temps Réel</h2>
+    <h2 id="titleStockList">📋 Catalogue et Stock en Temps Réel</h2>
     <table>
         <thead>
             <tr>
-                <th>ID</th>
-                <th>Code-barres</th>
-                <th>Nom</th>
-                <th>Catégorie</th>
-                <th>Prix</th>
-                <th>Stock</th>
+                <th>SKU</th>
+                <th id="thName">Nom</th>
+                <th id="thCat">Catégorie</th>
+                <th id="thRef">Réf. Fabricant</th>
+                <th id="thPrice">Prix Vente</th>
+                <th id="thStock">Stock</th>
+                <th id="thLoc">Emplacement</th>
             </tr>
         </thead>
-        <tbody id="productTableBody"></tbody>
+        <tbody id="partsTableBody"></tbody>
     </table>
 </div>
 
-<!-- Zone cachée pour le ticket thermique 58mm -->
+<!-- Ticket 58mm -->
 <div id="ticket-print">
     <div class="ticket-center">
-        <strong>SOGICO / MAGASIN</strong><br>
-        Reçu de Vente<br>
+        <strong id="ticketShopName">MAGASIN / SOGICO</strong><br>
+        <span id="ticketTitle">Reçu de Vente / Receipt</span><br>
         <span id="ticket-date"></span>
     </div>
     <div class="ticket-line"></div>
     <div id="ticket-items"></div>
     <div class="ticket-line"></div>
     <div class="ticket-flex">
-        <strong>TOTAL :</strong>
+        <span id="ticketTotalLabel">TOTAL :</span>
         <strong id="ticket-total"></strong>
     </div>
     <div class="ticket-line"></div>
-    <div class="ticket-center">
-        Merci pour votre achat !<br>
-        À bientôt !
+    <div class="ticket-center" id="ticketFooter">
+        Merci pour votre visite !<br>Thank you for your visit!
     </div>
 </div>
 
 <script>
-    let allProducts = [];
+    let currentLang = 'fr';
+    let allParts = [];
     let allCategories = [];
+
+    const translations = {
+        fr: {
+            pageTitle: "Caisse & Gestion de Pièces",
+            titleDashboard: "📊 Tableau de Bord",
+            lblTodaySales: "CA du Jour",
+            lblSalesCount: "Ventes du Jour",
+            lblStockValue: "Valeur du Stock",
+            lblLowStock: "Alertes Stock",
+            titleCategory: "🏷️ Gestion des Catégories",
+            lblCatName: "Nom de la catégorie :",
+            btnSaveCat: "Ajouter la catégorie",
+            titlePart: "📦 Ajouter une Pièce / Article",
+            lblSku: "SKU / Code-barres :",
+            lblPartName: "Nom de la pièce :",
+            lblCategory: "Catégorie :",
+            lblBrandPart: "Marque (ex: Bosch, Valeo) :",
+            lblPartNumber: "Référence Fabricant :",
+            lblLocation: "Emplacement (ex: Allée 3) :",
+            lblBuyPrice: "Prix d'achat :",
+            lblSalePrice: "Prix de vente :",
+            lblStockQty: "Quantité en stock :",
+            lblMinAlert: "Seuil d'alerte stock :",
+            btnSavePart: "Enregistrer la pièce",
+            titleSale: "🛒 Caisse & Enregistrement de Vente",
+            lblSelectPart: "Sélectionner la pièce :",
+            lblSaleQty: "Quantité :",
+            lblPaymentMethod: "Mode de paiement :",
+            btnValidateSale: "Valider la Vente & Imprimer le Ticket",
+            titleStockList: "📋 Catalogue et Stock en Temps Réel",
+            thName: "Nom", thCat: "Catégorie", thRef: "Réf. Fabricant", thPrice: "Prix Vente", thStock: "Stock", thLoc: "Emplacement",
+            ticketTitle: "Reçu de Vente", ticketTotalLabel: "TOTAL :", ticketFooter: "Merci pour votre visite !"
+        },
+        en: {
+            pageTitle: "POS & Parts Management",
+            titleDashboard: "📊 Dashboard",
+            lblTodaySales: "Today's Revenue",
+            lblSalesCount: "Today's Sales",
+            lblStockValue: "Stock Value",
+            lblLowStock: "Low Stock Alerts",
+            titleCategory: "🏷️ Category Management",
+            lblCatName: "Category Name:",
+            btnSaveCat: "Add Category",
+            titlePart: "📦 Add Part / Item",
+            lblSku: "SKU / Barcode:",
+            lblPartName: "Part Name:",
+            lblCategory: "Category:",
+            lblBrandPart: "Brand (e.g., Bosch, Valeo):",
+            lblPartNumber: "Part Number / OEM:",
+            lblLocation: "Location (e.g., Aisle 3):",
+            lblBuyPrice: "Purchase Price:",
+            lblSalePrice: "Sale Price:",
+            lblStockQty: "Stock Quantity:",
+            lblMinAlert: "Min Stock Alert:",
+            btnSavePart: "Save Part",
+            titleSale: "🛒 POS & Sale Processing",
+            lblSelectPart: "Select Part:",
+            lblSaleQty: "Quantity:",
+            lblPaymentMethod: "Payment Method:",
+            btnValidateSale: "Validate Sale & Print Receipt",
+            titleStockList: "📋 Real-Time Stock & Catalog",
+            thName: "Name", thCat: "Category", thRef: "Part Number", thPrice: "Sale Price", thStock: "Stock", thLoc: "Location",
+            ticketTitle: "Sales Receipt", ticketTotalLabel: "TOTAL:", ticketFooter: "Thank you for your visit!"
+        }
+    };
+
+    function switchLanguage(lang) {
+        currentLang = lang;
+        const t = translations[lang];
+        document.getElementById('pageTitle').innerText = t.pageTitle;
+        document.getElementById('titleDashboard').innerText = t.titleDashboard;
+        document.getElementById('lblTodaySales').innerText = t.lblTodaySales;
+        document.getElementById('lblSalesCount').innerText = t.lblSalesCount;
+        document.getElementById('lblStockValue').innerText = t.lblStockValue;
+        document.getElementById('lblLowStock').innerText = t.lblLowStock;
+        document.getElementById('titleCategory').innerText = t.titleCategory;
+        document.getElementById('lblCatName').innerText = t.lblCatName;
+        document.getElementById('btnSaveCat').innerText = t.btnSaveCat;
+        document.getElementById('titlePart').innerText = t.titlePart;
+        document.getElementById('lblSku').innerText = t.lblSku;
+        document.getElementById('lblPartName').innerText = t.lblPartName;
+        document.getElementById('lblCategory').innerText = t.lblCategory;
+        document.getElementById('lblBrandPart').innerText = t.lblBrandPart;
+        document.getElementById('lblPartNumber').innerText = t.lblPartNumber;
+        document.getElementById('lblLocation').innerText = t.lblLocation;
+        document.getElementById('lblBuyPrice').innerText = t.lblBuyPrice;
+        document.getElementById('lblSalePrice').innerText = t.lblSalePrice;
+        document.getElementById('lblStockQty').innerText = t.lblStockQty;
+        document.getElementById('lblMinAlert').innerText = t.lblMinAlert;
+        document.getElementById('btnSavePart').innerText = t.btnSavePart;
+        document.getElementById('titleSale').innerText = t.titleSale;
+        document.getElementById('lblSelectPart').innerText = t.lblSelectPart;
+        document.getElementById('lblSaleQty').innerText = t.lblSaleQty;
+        document.getElementById('lblPaymentMethod').innerText = t.lblPaymentMethod;
+        document.getElementById('btnValidateSale').innerText = t.btnValidateSale;
+        document.getElementById('titleStockList').innerText = t.titleStockList;
+        document.getElementById('thName').innerText = t.thName;
+        document.getElementById('thCat').innerText = t.thCat;
+        document.getElementById('thRef').innerText = t.thRef;
+        document.getElementById('thPrice').innerText = t.thPrice;
+        document.getElementById('thStock').innerText = t.thStock;
+        document.getElementById('thLoc').innerText = t.thLoc;
+        document.getElementById('ticketTitle').innerText = t.ticketTitle;
+        document.getElementById('ticketTotalLabel').innerText = t.ticketTotalLabel;
+        document.getElementById('ticketFooter').innerText = t.ticketFooter;
+    }
 
     async function loadData() {
         try {
-            // Charger les statistiques du tableau de bord
+            // Stats Dashboard
             const statsRes = await fetch('/api/dashboard/stats');
             const stats = await statsRes.json();
             document.getElementById('statTodaySales').innerText = stats.today_sales;
             document.getElementById('statSalesCount').innerText = stats.sales_count;
             document.getElementById('statStockValue').innerText = stats.total_stock_value;
-            document.getElementById('statOutOfStock').innerText = stats.out_of_stock_count;
+            document.getElementById('statLowStock').innerText = stats.low_stock_count;
 
-            // Charger les catégories
+            // Categories
             const catRes = await fetch('/api/categories');
             allCategories = await catRes.json();
-            const catSelectProd = document.getElementById('productCategorySelect');
-            catSelectProd.innerHTML = '<option value="">-- Choisir une catégorie --</option>';
+            const catSelect = document.getElementById('partCategorySelect');
+            catSelect.innerHTML = `<option value="">-- ${currentLang === 'fr' ? 'Sélectionner' : 'Select'} --</option>`;
             allCategories.forEach(c => {
-                catSelectProd.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+                catSelect.innerHTML += `<option value="${c.id}">${c.name}</option>`;
             });
 
-            // Charger les produits
-            const prodRes = await fetch('/api/products');
-            allProducts = await prodRes.json();
-            
-            const tbody = document.getElementById('productTableBody');
-            const select = document.getElementById('saleProductSelect');
+            // Parts
+            const partsRes = await fetch('/api/parts');
+            allParts = await partsRes.json();
+            const tbody = document.getElementById('partsTableBody');
+            const saleSelect = document.getElementById('salePartSelect');
             
             tbody.innerHTML = '';
-            select.innerHTML = '<option value="">-- Choisir un produit --</option>';
-            
-            allProducts.forEach(p => {
+            saleSelect.innerHTML = `<option value="">-- ${currentLang === 'fr' ? 'Choisir une pièce' : 'Choose a part'} --</option>`;
+
+            allParts.forEach(p => {
                 tbody.innerHTML += `
                     <tr>
-                        <td>${p.id}</td>
-                        <td>${p.barcode || '-'}</td>
-                        <td>${p.name}</td>
+                        <td><b>${p.sku}</b></td>
+                        <td>${p.name} ${p.brand_part ? '('+p.brand_part+')' : ''}</td>
                         <td>${p.category_name || '-'}</td>
-                        <td>${p.price}</td>
-                        <td>${p.stock_quantity}</td>
+                        <td>${p.part_number}</td>
+                        <td>${p.sale_price}</td>
+                        <td style="${p.stock_quantity <= p.min_stock_alert ? 'color: red; font-weight: bold;' : ''}">${p.stock_quantity}</td>
+                        <td>${p.location || '-'}</td>
                     </tr>
                 `;
-                select.innerHTML += `<option value="${p.id}">${p.name} (Stock: ${p.stock_quantity}) - ${p.price}</option>`;
+                saleSelect.innerHTML += `<option value="${p.id}">${p.name} (Ref: ${p.part_number}) - Stock: ${p.stock_quantity} - ${p.sale_price}</option>`;
             });
         } catch (err) {
-            console.error("Erreur de chargement:", err);
+            console.error("Erreur chargement:", err);
         }
     }
 
-    // Gestion du scan de code-barres pour la vente rapide
-    document.getElementById('saleBarcodeScan').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            const scannedCode = e.target.value.trim();
-            const found = allProducts.find(p => p.barcode === scannedCode);
-            if (found) {
-                document.getElementById('saleProductSelect').value = found.id;
-                e.target.value = ''; 
-                alert(`Produit détecté : ${found.name}`);
-            } else {
-                alert("Code-barres inconnu !");
-            }
-        }
-    });
-
-    // Ajouter une catégorie
+    // Submit Catégorie
     document.getElementById('categoryForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const name = document.getElementById('categoryName').value;
@@ -250,89 +384,87 @@
             body: JSON.stringify({ name })
         });
         if (res.ok) {
-            alert('Catégorie ajoutée !');
+            alert(currentLang === 'fr' ? 'Catégorie ajoutée !' : 'Category added!');
             document.getElementById('categoryForm').reset();
             loadData();
         }
     });
 
-    // Ajouter un produit
-    document.getElementById('productForm').addEventListener('submit', async (e) => {
+    // Submit Pièce
+    document.getElementById('partForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const productData = {
-            barcode: document.getElementById('barcode').value,
-            name: document.getElementById('name').value,
-            category_id: document.getElementById('productCategorySelect').value || null,
-            price: parseFloat(document.getElementById('price').value),
-            stock_quantity: parseInt(document.getElementById('stock_quantity').value)
+        const partData = {
+            sku: document.getElementById('sku').value,
+            name: document.getElementById('partName').value,
+            category_id: document.getElementById('partCategorySelect').value || null,
+            brand_part: document.getElementById('brandPart').value || null,
+            part_number: document.getElementById('partNumber').value,
+            location: document.getElementById('location').value || null,
+            purchase_price: parseFloat(document.getElementById('purchasePrice').value),
+            sale_price: parseFloat(document.getElementById('salePrice').value),
+            stock_quantity: parseInt(document.getElementById('stockQuantity').value),
+            min_stock_alert: parseInt(document.getElementById('minStockAlert').value)
         };
 
-        const res = await fetch('/api/products', {
+        const res = await fetch('/api/parts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(productData)
+            body: JSON.stringify(partData)
         });
 
         if (res.ok) {
-            alert('Produit enregistré avec succès !');
-            document.getElementById('productForm').reset();
+            alert(currentLang === 'fr' ? 'Pièce enregistrée avec succès !' : 'Part saved successfully!');
+            document.getElementById('partForm').reset();
             loadData();
         } else {
-            alert("Erreur lors de l'enregistrement du produit.");
+            alert(currentLang === 'fr' ? "Erreur lors de l'enregistrement." : "Error saving part.");
         }
     });
 
-    // Enregistrer une vente et imprimer le ticket
+    // Submit Vente
     document.getElementById('saleForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const productId = parseInt(document.getElementById('saleProductSelect').value);
+        const partId = parseInt(document.getElementById('salePartSelect').value);
         const quantity = parseInt(document.getElementById('saleQuantity').value);
+        const paymentMethod = document.getElementById('paymentMethod').value;
 
-        const selectedProduct = allProducts.find(p => p.id === productId);
-        if (!selectedProduct) {
-            alert("Veuillez sélectionner un produit.");
-            return;
-        }
+        const selectedPart = allParts.find(p => p.id === partId);
+        if (!selectedPart) return;
 
-        if (quantity > selectedProduct.stock_quantity) {
-            alert("Stock insuffisant !");
+        if (quantity > selectedPart.stock_quantity) {
+            alert(currentLang === 'fr' ? "Stock insuffisant !" : "Insufficient stock!");
             return;
         }
 
         const saleData = {
-            items: [{ product_id: productId, quantity: quantity, unit_price: selectedProduct.price }]
+            status: 'payé',
+            payment_method: paymentMethod,
+            items: [{ part_id: partId, quantity: quantity, unit_price: selectedPart.sale_price }]
         };
 
-        try {
-            const response = await fetch('/api/sales', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(saleData)
-            });
+        const response = await fetch('/api/sales', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(saleData)
+        });
 
-            const result = await response.json();
-            if (response.ok) {
-                // Préparer le contenu du ticket thermique
-                document.getElementById('ticket-date').innerText = new Date().toLocaleString();
-                document.getElementById('ticket-items').innerHTML = `
-                    <div>${selectedProduct.name}</div>
-                    <div class="ticket-flex">
-                        <span>${quantity} x ${selectedProduct.price}</span>
-                        <span><b>${quantity * selectedProduct.price}</b></span>
-                    </div>
-                `;
-                document.getElementById('ticket-total').innerText = result.total_amount;
+        const result = await response.json();
+        if (response.ok) {
+            document.getElementById('ticket-date').innerText = new Date().toLocaleString();
+            document.getElementById('ticket-items').innerHTML = `
+                <div>${selectedPart.name} (${selectedPart.part_number})</div>
+                <div class="ticket-flex">
+                    <span>${quantity} x ${selectedPart.sale_price}</span>
+                    <span><b>${quantity * selectedPart.sale_price}</b></span>
+                </div>
+            `;
+            document.getElementById('ticket-total').innerText = result.total_amount;
 
-                // Lancer l'impression
-                window.print();
-
-                document.getElementById('saleForm').reset();
-                loadData();
-            } else {
-                alert("Erreur : " + result.error);
-            }
-        } catch (err) {
-            console.error("Erreur vente:", err);
+            window.print();
+            document.getElementById('saleForm').reset();
+            loadData();
+        } else {
+            alert("Erreur: " + result.error);
         }
     });
 
