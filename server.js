@@ -48,6 +48,56 @@ app.get('/api/products', async (req, res) => {
         res.status(500).json({ error: "Erreur lors de la récupération des produits" });
     }
 });
+// Route pour enregistrer une vente et mettre à jour le stock
+app.post('/api/sales', async (req, res) => {
+    const { items } = req.body; // items attendu : [{ product_id, quantity, unit_price }]
+    
+    if (!items || items.length === 0) {
+        return res.status(400).json({ error: "Aucun article dans la vente" });
+    }
+
+    const client = await pool.connect();
+    try {
+        await client.query('BEGIN'); // Début de la transaction
+
+        // 1. Calculer le montant total
+        let totalAmount = 0;
+        for (let item of items) {
+            totalAmount += item.quantity * item.unit_price;
+        }
+
+        // 2. Insérer l'en-tête de la vente
+        const saleQuery = `INSERT INTO sales (total_amount) VALUES ($1) RETURNING id;`;
+        const saleResult = await client.query(saleQuery, [totalAmount]);
+        const saleId = saleResult.rows[0].id;
+
+        // 3. Insérer les articles vendus et décrémenter le stock
+        for (let item of items) {
+            const itemQuery = `
+                INSERT INTO sale_items (sale_id, product_id, quantity, unit_price) 
+                VALUES ($1, $2, $3, $4);
+            `;
+            await client.query(itemQuery, [saleId, item.product_id, item.quantity, item.unit_price]);
+
+            const updateStockQuery = `
+                UPDATE products 
+                SET stock_quantity = stock_quantity - $1 
+                WHERE id = $2;
+            `;
+            await client.query(updateStockQuery, [item.quantity, item.product_id]);
+        }
+
+        await client.query('COMMIT'); // Valider la transaction
+        res.status(201).json({ message: "Vente enregistrée avec succès", sale_id: saleId, total_amount: totalAmount });
+
+    } catch (err) {
+        await client.query('ROLLBACK'); // Annuler en cas d'erreur
+        console.error(err);
+        res.status(500).json({ error: "Erreur lors de l'enregistrement de la vente" });
+    } finally {
+        client.release();
+    }
+});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Serveur démarré sur le port ${PORT}`);
