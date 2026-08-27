@@ -22,7 +22,22 @@ app.get('/', async (req, res) => {
     res.status(500).json({ error: "Erreur de connexion à la base de données" });
   }
 });
-
+// Route pour ajouter un produit
+app.post('/api/products', async (req, res) => {
+    const { name, category_id, price, stock_quantity } = req.body;
+    try {
+        const query = `
+            INSERT INTO products (name, category_id, price, stock_quantity) 
+            VALUES ($1, $2, $3, $4) RETURNING *;
+        `;
+        const values = [name, category_id || null, price, stock_quantity || 0];
+        const result = await pool.query(query, values);
+        res.status(201).json({ message: "Produit ajouté avec succès", product: result.rows[0] });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Erreur lors de l'ajout du produit" });
+    }
+});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Serveur démarré sur le port ${PORT}`);
