@@ -6,13 +6,15 @@
     <title>Gestion de Stock & Ventes</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f9; color: #333; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
         h2 { border-bottom: 2px solid #ddd; padding-bottom: 5px; color: #0066cc; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
         input, select { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
         button { background: #0066cc; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; }
         button:hover { background: #004999; }
+        button.success { background: #28a745; }
+        button.success:hover { background: #218838; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
         th { background: #f8f9fa; }
@@ -28,7 +30,7 @@
             <input type="text" id="name" required>
         </div>
         <div class="form-group">
-            <label>Prix (CDF/USD) :</label>
+            <label>Prix unitaire :</label>
             <input type="number" step="0.01" id="price" required>
         </div>
         <div class="form-group">
@@ -37,15 +39,34 @@
         </div>
         <button type="submit">Enregistrer le produit</button>
     </form>
+</div>
 
-    <h2>📋 Liste du Stock</h2>
+<div class="container">
+    <h2>🛒 Enregistrer une Vente</h2>
+    <form id="saleForm">
+        <div class="form-group">
+            <label>Sélectionner le produit :</label>
+            <select id="saleProductSelect" required>
+                <option value="">-- Chargement des produits --</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Quantité vendue :</label>
+            <input type="number" id="saleQuantity" value="1" min="1" required>
+        </div>
+        <button type="submit" class="success">Valider la vente</button>
+    </form>
+</div>
+
+<div class="container">
+    <h2>📋 Liste du Stock en Temps Réel</h2>
     <table>
         <thead>
             <tr>
                 <th>ID</th>
                 <th>Nom</th>
                 <th>Prix</th>
-                <th>Stock</th>
+                <th>Stock Restant</th>
             </tr>
         </thead>
         <tbody id="productTableBody">
@@ -55,18 +76,24 @@
 </div>
 
 <script>
-    // URL de ton API (mets ton URL Railway ici, ou laisse '/' si ton HTML est servi directement par ton serveur Node.js)
-    const API_URL = ''; 
+    const API_URL = ''; // Utilise le même domaine
 
-    // Charger les produits au démarrage
+    let allProducts = [];
+
+    // Charger les produits et mettre à jour le tableau et la liste déroulante
     async function loadProducts() {
         try {
             const response = await fetch(`${API_URL}/api/products`);
-            const products = await response.json();
-            const tbody = document.getElementById('productTableBody');
-            tbody.innerHTML = '';
+            allProducts = await response.json();
             
-            products.forEach(p => {
+            const tbody = document.getElementById('productTableBody');
+            const select = document.getElementById('saleProductSelect');
+            
+            tbody.innerHTML = '';
+            select.innerHTML = '<option value="">-- Choisir un produit --</option>';
+            
+            allProducts.forEach(p => {
+                // Remplir le tableau
                 tbody.innerHTML += `
                     <tr>
                         <td>${p.id}</td>
@@ -75,6 +102,9 @@
                         <td>${p.stock_quantity}</td>
                     </tr>
                 `;
+                
+                // Remplir le menu déroulant de vente
+                select.innerHTML += `<option value="${p.id}" data-price="${p.price}" data-stock="${p.stock_quantity}">${p.name} (Stock : ${p.stock_quantity}) - Prix : ${p.price}</option>`;
             });
         } catch (err) {
             console.error("Erreur chargement produits:", err);
@@ -98,9 +128,57 @@
             if (response.ok) {
                 alert('Produit ajouté avec succès !');
                 document.getElementById('productForm').reset();
-                loadProducts(); // Recharger la liste
+                loadProducts();
             } else {
                 alert("Erreur lors de l'ajout");
+            }
+        } catch (err) {
+            console.error("Erreur:", err);
+        }
+    });
+
+    // Gérer l'enregistrement d'une vente
+    document.getElementById('saleForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const productId = parseInt(document.getElementById('saleProductSelect').value);
+        const quantity = parseInt(document.getElementById('saleQuantity').value);
+
+        // Retrouver le produit sélectionné pour obtenir son prix unitaire
+        const selectedProduct = allProducts.find(p => p.id === productId);
+        if (!selectedProduct) {
+            alert("Veuillez sélectionner un produit valide.");
+            return;
+        }
+
+        if (quantity > selectedProduct.stock_quantity) {
+            alert("Stock insuffisant pour cette quantité !");
+            return;
+        }
+
+        const saleData = {
+            items: [
+                {
+                    product_id: productId,
+                    quantity: quantity,
+                    unit_price: selectedProduct.price
+                }
+            ]
+        };
+
+        try {
+            const response = await fetch(`${API_URL}/api/sales`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(saleData)
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                alert(`Vente enregistrée avec succès ! Montant total : ${result.total_amount}`);
+                document.getElementById('saleForm').reset();
+                loadProducts(); // Recharge le stock pour voir la décrémentation en direct
+            } else {
+                alert("Erreur : " + (result.error || "Impossible d'enregistrer la vente"));
             }
         } catch (err) {
             console.error("Erreur:", err);
