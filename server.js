@@ -115,6 +115,37 @@ app.post('/api/sales', async (req, res) => {
         client.release();
     }
 });
+// Route pour les statistiques du Tableau de Bord
+app.get('/api/dashboard/stats', async (req, res) => {
+    try {
+        // Chiffre d'affaires et nombre de ventes du jour
+        const todayQuery = `
+            SELECT COALESCE(SUM(total_amount), 0) as total_sales, COUNT(id) as sales_count 
+            FROM sales 
+            WHERE DATE(created_at) = CURRENT_DATE;
+        `;
+        const todayResult = await pool.query(todayQuery);
+
+        // Valeur totale du stock et nombre de produits en rupture
+        const stockQuery = `
+            SELECT 
+                COALESCE(SUM(price * stock_quantity), 0) as total_stock_value,
+                COUNT(CASE WHEN stock_quantity <= 0 THEN 1 END) as out_of_stock_count
+            FROM products;
+        `;
+        const stockResult = await pool.query(stockQuery);
+
+        res.json({
+            today_sales: todayResult.rows[0].total_sales,
+            sales_count: todayResult.rows[0].sales_count,
+            total_stock_value: stockResult.rows[0].total_stock_value,
+            out_of_stock_count: stockResult.rows[0].out_of_stock_count
+        });
+    } catch (err) {
+        console.error("Erreur stats dashboard:", err);
+        res.status(500).json({ error: "Erreur lors de la récupération des statistiques" });
+    }
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
