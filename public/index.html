@@ -3,32 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion de Stock & Ventes</title>
+    <title>Caisse & Gestion de Stock</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f9; color: #333; }
-        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
         h2 { border-bottom: 2px solid #ddd; padding-bottom: 5px; color: #0066cc; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
         input, select { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
         button { background: #0066cc; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; }
         button:hover { background: #004999; }
+        button.success { background: #28a745; }
+        button.success:hover { background: #218838; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
         th { background: #f8f9fa; }
+
+        /* Style caché pour l'impression du ticket thermique 58mm */
+        #ticket-print { display: none; }
+
+        @media print {
+            body * { visibility: hidden; }
+            #ticket-print, #ticket-print * { visibility: visible; }
+            #ticket-print {
+                display: block;
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 58mm;
+                font-family: 'Courier New', Courier, monospace;
+                font-size: 12px;
+                padding: 5px;
+                background: white;
+                color: black;
+            }
+            .ticket-center { text-align: center; }
+            .ticket-line { border-bottom: 1px dashed #000; margin: 5px 0; }
+            .ticket-flex { display: flex; justify-content: space-between; }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <h2>🏷️ Gestion des Catégories</h2>
+    <form id="categoryForm">
+        <div class="form-group">
+            <label>Nom de la nouvelle catégorie :</label>
+            <input type="text" id="categoryName" required>
+        </div>
+        <button type="submit">Ajouter la catégorie</button>
+    </form>
+</div>
+
+<div class="container">
     <h2>📦 Ajouter un Produit</h2>
     <form id="productForm">
+        <div class="form-group">
+            <label>Code-barres :</label>
+            <input type="text" id="barcode" placeholder="Scanner ou saisir le code-barres">
+        </div>
         <div class="form-group">
             <label>Nom du produit :</label>
             <input type="text" id="name" required>
         </div>
         <div class="form-group">
-            <label>Prix (CDF/USD) :</label>
+            <label>Catégorie :</label>
+            <select id="productCategorySelect">
+                <option value="">-- Aucune catégorie --</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Prix unitaire :</label>
             <input type="number" step="0.01" id="price" required>
         </div>
         <div class="form-group">
@@ -37,78 +83,223 @@
         </div>
         <button type="submit">Enregistrer le produit</button>
     </form>
+</div>
 
-    <h2>📋 Liste du Stock</h2>
+<div class="container">
+    <h2>🛒 Enregistrer une Vente (Caisse)</h2>
+    <form id="saleForm">
+        <div class="form-group">
+            <label>Scanner / Entrer le code-barres pour vendre :</label>
+            <input type="text" id="saleBarcodeScan" placeholder="Scannez ici pour ajouter directement au panier...">
+        </div>
+        <div class="form-group">
+            <label>Ou Sélectionner le produit :</label>
+            <select id="saleProductSelect">
+                <option value="">-- Choisir un produit --</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Quantité vendue :</label>
+            <input type="number" id="saleQuantity" value="1" min="1" required>
+        </div>
+        <button type="submit" class="success">Valider la Vente & Imprimer le Ticket</button>
+    </form>
+</div>
+
+<div class="container">
+    <h2>📋 Liste du Stock en Temps Réel</h2>
     <table>
         <thead>
             <tr>
                 <th>ID</th>
+                <th>Code-barres</th>
                 <th>Nom</th>
+                <th>Catégorie</th>
                 <th>Prix</th>
                 <th>Stock</th>
             </tr>
         </thead>
-        <tbody id="productTableBody">
-            <!-- Les produits s'afficheront ici dynamiquement -->
-        </tbody>
+        <tbody id="productTableBody"></tbody>
     </table>
 </div>
 
-<script>
-    // URL de ton API (mets ton URL Railway ici, ou laisse '/' si ton HTML est servi directement par ton serveur Node.js)
-    const API_URL = ''; 
+<!-- Zone cachée pour le ticket thermique 58mm -->
+<div id="ticket-print">
+    <div class="ticket-center">
+        <strong>SOGICO / MAGASIN</strong><br>
+        Reçu de Vente<br>
+        <span id="ticket-date"></span>
+    </div>
+    <div class="ticket-line"></div>
+    <div id="ticket-items"></div>
+    <div class="ticket-line"></div>
+    <div class="ticket-flex">
+        <strong>TOTAL :</strong>
+        <strong id="ticket-total"></strong>
+    </div>
+    <div class="ticket-line"></div>
+    <div class="ticket-center">
+        Merci pour votre achat !<br>
+        À bientôt !
+    </div>
+</div>
 
-    // Charger les produits au démarrage
-    async function loadProducts() {
+<script>
+    let allProducts = [];
+    let allCategories = [];
+
+    async function loadData() {
         try {
-            const response = await fetch(`${API_URL}/api/products`);
-            const products = await response.json();
-            const tbody = document.getElementById('productTableBody');
-            tbody.innerHTML = '';
+            // Charger les catégories
+            const catRes = await fetch('/api/categories');
+            allCategories = await catRes.json();
+            const catSelectProd = document.getElementById('productCategorySelect');
+            catSelectProd.innerHTML = '<option value="">-- Choisir une catégorie --</option>';
+            allCategories.forEach(c => {
+                catSelectProd.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+            });
+
+            // Charger les produits
+            const prodRes = await fetch('/api/products');
+            allProducts = await prodRes.json();
             
-            products.forEach(p => {
+            const tbody = document.getElementById('productTableBody');
+            const select = document.getElementById('saleProductSelect');
+            
+            tbody.innerHTML = '';
+            select.innerHTML = '<option value="">-- Choisir un produit --</option>';
+            
+            allProducts.forEach(p => {
                 tbody.innerHTML += `
                     <tr>
                         <td>${p.id}</td>
+                        <td>${p.barcode || '-'}</td>
                         <td>${p.name}</td>
+                        <td>${p.category_name || '-'}</td>
                         <td>${p.price}</td>
                         <td>${p.stock_quantity}</td>
                     </tr>
                 `;
+                select.innerHTML += `<option value="${p.id}">${p.name} (Stock: ${p.stock_quantity}) - ${p.price}</option>`;
             });
         } catch (err) {
-            console.error("Erreur chargement produits:", err);
+            console.error("Erreur de chargement:", err);
         }
     }
 
-    // Gérer l'ajout d'un produit
-    document.getElementById('productForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const name = document.getElementById('name').value;
-        const price = parseFloat(document.getElementById('price').value);
-        const stock_quantity = parseInt(document.getElementById('stock_quantity').value);
-
-        try {
-            const response = await fetch(`${API_URL}/api/products`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, price, stock_quantity })
-            });
-
-            if (response.ok) {
-                alert('Produit ajouté avec succès !');
-                document.getElementById('productForm').reset();
-                loadProducts(); // Recharger la liste
+    // Gestion du scan de code-barres pour la vente rapide
+    document.getElementById('saleBarcodeScan').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const scannedCode = e.target.value.trim();
+            const found = allProducts.find(p => p.barcode === scannedCode);
+            if (found) {
+                document.getElementById('saleProductSelect').value = found.id;
+                e.target.value = ''; // Réinitialiser le champ scan
+                alert(`Produit détecté : ${found.name}`);
             } else {
-                alert("Erreur lors de l'ajout");
+                alert("Code-barres inconnu !");
             }
-        } catch (err) {
-            console.error("Erreur:", err);
         }
     });
 
-    // Charger les produits dès l'ouverture de la page
-    loadProducts();
+    // Ajouter une catégorie
+    document.getElementById('categoryForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('categoryName').value;
+        const res = await fetch('/api/categories', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name })
+        });
+        if (res.ok) {
+            alert('Catégorie ajoutée !');
+            document.getElementById('categoryForm').reset();
+            loadData();
+        }
+    });
+
+    // Ajouter un produit
+    document.getElementById('productForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const productData = {
+            barcode: document.getElementById('barcode').value,
+            name: document.getElementById('name').value,
+            category_id: document.getElementById('productCategorySelect').value || null,
+            price: parseFloat(document.getElementById('price').value),
+            stock_quantity: parseInt(document.getElementById('stock_quantity').value)
+        };
+
+        const res = await fetch('/api/products', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(productData)
+        });
+
+        if (res.ok) {
+            alert('Produit enregistré avec succès !');
+            document.getElementById('productForm').reset();
+            loadData();
+        } else {
+            alert("Erreur lors de l'enregistrement du produit.");
+        }
+    });
+
+    // Enregistrer une vente et imprimer le ticket
+    document.getElementById('saleForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const productId = parseInt(document.getElementById('saleProductSelect').value);
+        const quantity = parseInt(document.getElementById('saleQuantity').value);
+
+        const selectedProduct = allProducts.find(p => p.id === productId);
+        if (!selectedProduct) {
+            alert("Veuillez sélectionner un produit.");
+            return;
+        }
+
+        if (quantity > selectedProduct.stock_quantity) {
+            alert("Stock insuffisant !");
+            return;
+        }
+
+        const saleData = {
+            items: [{ product_id: productId, quantity: quantity, unit_price: selectedProduct.price }]
+        };
+
+        try {
+            const response = await fetch('/api/sales', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(saleData)
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                // Préparer le contenu du ticket thermique
+                document.getElementById('ticket-date').innerText = new Date().toLocaleString();
+                document.getElementById('ticket-items').innerHTML = `
+                    <div>${selectedProduct.name}</div>
+                    <div class="ticket-flex">
+                        <span>${quantity} x ${selectedProduct.price}</span>
+                        <span><b>${quantity * selectedProduct.price}</b></span>
+                    </div>
+                `;
+                document.getElementById('ticket-total').innerText = result.total_amount;
+
+                // Lancer l'impression (la boîte de dialogue d'impression s'ouvrira, dirigée vers ton imprimante 58mm)
+                window.print();
+
+                document.getElementById('saleForm').reset();
+                loadData();
+            } else {
+                alert("Erreur : " + result.error);
+            }
+        } catch (err) {
+            console.error("Erreur vente:", err);
+        }
+    });
+
+    loadData();
 </script>
 
 </body>
