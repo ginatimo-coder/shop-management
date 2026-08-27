@@ -12,7 +12,9 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-// Route catégories
+// ==========================================
+// API : CATÉGORIES
+// ==========================================
 app.get('/api/categories', async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM categories ORDER BY name ASC');
@@ -34,12 +36,14 @@ app.post('/api/categories', async (req, res) => {
     }
 });
 
-// Route pour lister tous les produits avec leur catégorie
-app.get('/api/products', async (req, res) => {
+// ==========================================
+// API : PIÈCES & STOCK (PARTS)
+// ==========================================
+app.get('/api/parts', async (req, res) => {
     try {
         const query = `
             SELECT p.*, c.name as category_name 
-            FROM products p 
+            FROM parts p 
             LEFT JOIN categories c ON p.category_id = c.id 
             ORDER BY p.id DESC;
         `;
@@ -47,30 +51,67 @@ app.get('/api/products', async (req, res) => {
         res.json(result.rows);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: "Erreur lors de la récupération des produits" });
+        res.status(500).json({ error: "Erreur récupération des pièces" });
     }
 });
 
-// Route pour ajouter un produit (avec code-barres et catégorie)
-app.post('/api/products', async (req, res) => {
-    const { name, category_id, price, stock_quantity, barcode } = req.body;
+app.post('/api/parts', async (req, res) => {
+    const { category_id, sku, name, brand_part, part_number, purchase_price, sale_price, stock_quantity, min_stock_alert, location } = req.body;
     try {
         const query = `
-            INSERT INTO products (name, category_id, price, stock_quantity, barcode) 
-            VALUES ($1, $2, $3, $4, $5) RETURNING *;
+            INSERT INTO parts (category_id, sku, name, brand_part, part_number, purchase_price, sale_price, stock_quantity, min_stock_alert, location) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *;
         `;
-        const values = [name, category_id || null, price, stock_quantity || 0, barcode || null];
+        const values = [
+            category_id || null, 
+            sku, 
+            name, 
+            brand_part || null, 
+            part_number, 
+            purchase_price || 0, 
+            sale_price || 0, 
+            stock_quantity || 0, 
+            min_stock_alert || 5, 
+            location || null
+        ];
         const result = await pool.query(query, values);
-        res.status(201).json({ message: "Produit ajouté avec succès", product: result.rows[0] });
+        res.status(201).json({ message: "Pièce ajoutée avec succès", part: result.rows[0] });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: "Erreur lors de l'ajout du produit (Code-barres peut-être déjà utilisé)" });
+        res.status(500).json({ error: "Erreur lors de l'ajout de la pièce (SKU déjà existant ?)" });
     }
 });
 
-// Route pour enregistrer une vente
+// ==========================================
+// API : CLIENTS (CUSTOMERS)
+// ==========================================
+app.get('/api/customers', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM customers ORDER BY name ASC');
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Erreur récupération clients" });
+    }
+});
+
+app.post('/api/customers', async (req, res) => {
+    const { name, phone, is_professional } = req.body;
+    try {
+        const query = `INSERT INTO customers (name, phone, is_professional) VALUES ($1, $2, $3) RETURNING *;`;
+        const result = await pool.query(query, [name, phone || null, is_professional || false]);
+        res.status(201).json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Erreur création client" });
+    }
+});
+
+// ==========================================
+// API : VENTES & CAISSE (SALES)
+// ==========================================
 app.post('/api/sales', async (req, res) => {
-    const { items } = req.body; 
+    const { customer_id, items, payment_method, status } = req.body; 
     
     if (!items || items.length === 0) {
         return res.status(400).json({ error: "Aucun article dans la vente" });
@@ -85,23 +126,35 @@ app.post('/api/sales', async (req, res) => {
             totalAmount += item.quantity * item.unit_price;
         }
 
-        const saleQuery = `INSERT INTO sales (total_amount) VALUES ($1) RETURNING id;`;
-        const saleResult = await client.query(saleQuery, [totalAmount]);
+        // Insertion de la vente (statut 'payé' ou 'devis', etc.)
+        const saleQuery = `
+            INSERT INTO sales (customer_id, total_amount, status, payment_method) 
+            VALUES ($1, $2, $3, $4) RETURNING id;
+        `;
+        const saleResult = await client.query(saleQuery, [
+            customer_id || null, 
+            totalAmount, 
+            status || 'payé', 
+            payment_method || 'especes'
+        ]);
         const saleId = saleResult.rows[0].id;
 
+        // Insertion des lignes et mise à jour du stock des pièces
         for (let item of items) {
             const itemQuery = `
-                INSERT INTO sale_items (sale_id, product_id, quantity, unit_price) 
+                INSERT INTO sale_items (sale_id, part_id, quantity, unit_price) 
                 VALUES ($1, $2, $3, $4);
             `;
-            await client.query(itemQuery, [saleId, item.product_id, item.quantity, item.unit_price]);
+            await client.query(itemQuery, [saleId, item.part_id, item.quantity, item.unit_price]);
 
-            const updateStockQuery = `
-                UPDATE products 
-                SET stock_quantity = stock_quantity - $1 
-                WHERE id = $2;
-            `;
-            await client.query(updateStockQuery, [item.quantity, item.product_id]);
+            if (status === 'payé') {
+                const updateStockQuery = `
+                    UPDATE parts 
+                    SET stock_quantity = stock_quantity - $1 
+                    WHERE id = $2;
+                `;
+                await client.query(updateStockQuery, [item.quantity, item.part_id]);
+            }
         }
 
         await client.query('COMMIT');
@@ -115,23 +168,24 @@ app.post('/api/sales', async (req, res) => {
         client.release();
     }
 });
-// Route pour les statistiques du Tableau de Bord
+
+// ==========================================
+// API : TABLEAU DE BORD (DASHBOARD STATS)
+// ==========================================
 app.get('/api/dashboard/stats', async (req, res) => {
     try {
-        // Chiffre d'affaires et nombre de ventes du jour
         const todayQuery = `
             SELECT COALESCE(SUM(total_amount), 0) as total_sales, COUNT(id) as sales_count 
             FROM sales 
-            WHERE DATE(created_at) = CURRENT_DATE;
+            WHERE DATE(created_at) = CURRENT_DATE AND status = 'payé';
         `;
         const todayResult = await pool.query(todayQuery);
 
-        // Valeur totale du stock et nombre de produits en rupture
         const stockQuery = `
             SELECT 
-                COALESCE(SUM(price * stock_quantity), 0) as total_stock_value,
-                COUNT(CASE WHEN stock_quantity <= 0 THEN 1 END) as out_of_stock_count
-            FROM products;
+                COALESCE(SUM(sale_price * stock_quantity), 0) as total_stock_value,
+                COUNT(CASE WHEN stock_quantity <= min_stock_alert THEN 1 END) as low_stock_count
+            FROM parts;
         `;
         const stockResult = await pool.query(stockQuery);
 
@@ -139,7 +193,7 @@ app.get('/api/dashboard/stats', async (req, res) => {
             today_sales: todayResult.rows[0].total_sales,
             sales_count: todayResult.rows[0].sales_count,
             total_stock_value: stockResult.rows[0].total_stock_value,
-            out_of_stock_count: stockResult.rows[0].out_of_stock_count
+            low_stock_count: stockResult.rows[0].low_stock_count
         });
     } catch (err) {
         console.error("Erreur stats dashboard:", err);
