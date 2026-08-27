@@ -5,6 +5,7 @@ const cors = require('cors');
 const app = express();
 app.use(express.json());
 app.use(cors());
+app.use(express.static('public'));
 
 // Connexion à PostgreSQL via la variable d'environnement de Railway
 const pool = new Pool({
