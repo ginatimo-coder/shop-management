@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Caisse & Gestion de Stock</title>
+    <title>Caisse & Gestion de Stock - Tableau de Bord</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f9; color: #333; }
         .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
@@ -18,6 +18,13 @@
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
         th { background: #f8f9fa; }
+
+        /* Styles pour le tableau de bord */
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 15px; }
+        .card { background: linear-gradient(135deg, #0066cc, #004999); color: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .card.alert { background: linear-gradient(135deg, #dc3545, #a71d2a); }
+        .card h3 { margin: 0 0 10px 0; font-size: 13px; text-transform: uppercase; opacity: 0.9; border: none; padding: 0; color: white; }
+        .card .value { font-size: 22px; font-weight: bold; }
 
         /* Style caché pour l'impression du ticket thermique 58mm */
         #ticket-print { display: none; }
@@ -44,6 +51,28 @@
     </style>
 </head>
 <body>
+
+<div class="container">
+    <h2>📊 Tableau de Bord de la Caisse</h2>
+    <div class="dashboard-grid">
+        <div class="card">
+            <h3>CA du Jour</h3>
+            <div class="value" id="statTodaySales">0.00</div>
+        </div>
+        <div class="card">
+            <h3>Ventes du Jour</h3>
+            <div class="value" id="statSalesCount">0</div>
+        </div>
+        <div class="card">
+            <h3>Valeur du Stock</h3>
+            <div class="value" id="statStockValue">0.00</div>
+        </div>
+        <div class="card alert" id="cardAlert">
+            <h3>Ruptures de stock</h3>
+            <div class="value" id="statOutOfStock">0</div>
+        </div>
+    </div>
+</div>
 
 <div class="container">
     <h2>🏷️ Gestion des Catégories</h2>
@@ -150,6 +179,14 @@
 
     async function loadData() {
         try {
+            // Charger les statistiques du tableau de bord
+            const statsRes = await fetch('/api/dashboard/stats');
+            const stats = await statsRes.json();
+            document.getElementById('statTodaySales').innerText = stats.today_sales;
+            document.getElementById('statSalesCount').innerText = stats.sales_count;
+            document.getElementById('statStockValue').innerText = stats.total_stock_value;
+            document.getElementById('statOutOfStock').innerText = stats.out_of_stock_count;
+
             // Charger les catégories
             const catRes = await fetch('/api/categories');
             allCategories = await catRes.json();
@@ -195,7 +232,7 @@
             const found = allProducts.find(p => p.barcode === scannedCode);
             if (found) {
                 document.getElementById('saleProductSelect').value = found.id;
-                e.target.value = ''; // Réinitialiser le champ scan
+                e.target.value = ''; 
                 alert(`Produit détecté : ${found.name}`);
             } else {
                 alert("Code-barres inconnu !");
@@ -286,7 +323,7 @@
                 `;
                 document.getElementById('ticket-total').innerText = result.total_amount;
 
-                // Lancer l'impression (la boîte de dialogue d'impression s'ouvrira, dirigée vers ton imprimante 58mm)
+                // Lancer l'impression
                 window.print();
 
                 document.getElementById('saleForm').reset();
