@@ -7,51 +7,70 @@ app.use(express.json());
 app.use(cors());
 app.use(express.static('public'));
 
-// Connexion à PostgreSQL via la variable d'environnement de Railway
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false } // Nécessaire souvent pour le cloud
+  ssl: { rejectUnauthorized: false }
 });
 
-// Route de test simple
-app.get('/', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT NOW()');
-    res.json({ message: "API connectée avec succès !", time: result.rows[0].now });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Erreur de connexion à la base de données" });
-  }
-});
-// Route pour ajouter un produit
-app.post('/api/products', async (req, res) => {
-    const { name, category_id, price, stock_quantity } = req.body;
+// Route catégories
+app.get('/api/categories', async (req, res) => {
     try {
-        const query = `
-            INSERT INTO products (name, category_id, price, stock_quantity) 
-            VALUES ($1, $2, $3, $4) RETURNING *;
-        `;
-        const values = [name, category_id || null, price, stock_quantity || 0];
-        const result = await pool.query(query, values);
-        res.status(201).json({ message: "Produit ajouté avec succès", product: result.rows[0] });
+        const result = await pool.query('SELECT * FROM categories ORDER BY name ASC');
+        res.json(result.rows);
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: "Erreur lors de l'ajout du produit" });
+        res.status(500).json({ error: "Erreur récupération catégories" });
     }
 });
-// Route pour lister tous les produits
+
+app.post('/api/categories', async (req, res) => {
+    const { name } = req.body;
+    try {
+        const result = await pool.query('INSERT INTO categories (name) VALUES ($1) RETURNING *;', [name]);
+        res.status(201).json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Erreur création catégorie" });
+    }
+});
+
+// Route pour lister tous les produits avec leur catégorie
 app.get('/api/products', async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM products ORDER BY id DESC');
+        const query = `
+            SELECT p.*, c.name as category_name 
+            FROM products p 
+            LEFT JOIN categories c ON p.category_id = c.id 
+            ORDER BY p.id DESC;
+        `;
+        const result = await pool.query(query);
         res.json(result.rows);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Erreur lors de la récupération des produits" });
     }
 });
-// Route pour enregistrer une vente et mettre à jour le stock
+
+// Route pour ajouter un produit (avec code-barres et catégorie)
+app.post('/api/products', async (req, res) => {
+    const { name, category_id, price, stock_quantity, barcode } = req.body;
+    try {
+        const query = `
+            INSERT INTO products (name, category_id, price, stock_quantity, barcode) 
+            VALUES ($1, $2, $3, $4, $5) RETURNING *;
+        `;
+        const values = [name, category_id || null, price, stock_quantity || 0, barcode || null];
+        const result = await pool.query(query, values);
+        res.status(201).json({ message: "Produit ajouté avec succès", product: result.rows[0] });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Erreur lors de l'ajout du produit (Code-barres peut-être déjà utilisé)" });
+    }
+});
+
+// Route pour enregistrer une vente
 app.post('/api/sales', async (req, res) => {
-    const { items } = req.body; // items attendu : [{ product_id, quantity, unit_price }]
+    const { items } = req.body; 
     
     if (!items || items.length === 0) {
         return res.status(400).json({ error: "Aucun article dans la vente" });
@@ -59,20 +78,17 @@ app.post('/api/sales', async (req, res) => {
 
     const client = await pool.connect();
     try {
-        await client.query('BEGIN'); // Début de la transaction
+        await client.query('BEGIN');
 
-        // 1. Calculer le montant total
         let totalAmount = 0;
         for (let item of items) {
             totalAmount += item.quantity * item.unit_price;
         }
 
-        // 2. Insérer l'en-tête de la vente
         const saleQuery = `INSERT INTO sales (total_amount) VALUES ($1) RETURNING id;`;
         const saleResult = await client.query(saleQuery, [totalAmount]);
         const saleId = saleResult.rows[0].id;
 
-        // 3. Insérer les articles vendus et décrémenter le stock
         for (let item of items) {
             const itemQuery = `
                 INSERT INTO sale_items (sale_id, product_id, quantity, unit_price) 
@@ -88,17 +104,18 @@ app.post('/api/sales', async (req, res) => {
             await client.query(updateStockQuery, [item.quantity, item.product_id]);
         }
 
-        await client.query('COMMIT'); // Valider la transaction
+        await client.query('COMMIT');
         res.status(201).json({ message: "Vente enregistrée avec succès", sale_id: saleId, total_amount: totalAmount });
 
     } catch (err) {
-        await client.query('ROLLBACK'); // Annuler en cas d'erreur
+        await client.query('ROLLBACK');
         console.error(err);
         res.status(500).json({ error: "Erreur lors de l'enregistrement de la vente" });
     } finally {
         client.release();
     }
 });
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Serveur démarré sur le port ${PORT}`);
