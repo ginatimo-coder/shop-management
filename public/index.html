@@ -46,20 +46,31 @@
         .toolbar { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .toolbar input, .toolbar select { max-width: 250px; }
 
-        /* Impression thermique 58mm noire nette */
-        #ticket-print { display: none; }
-        @media print {
-            body * { visibility: hidden; }
-            #ticket-print, #ticket-print * { visibility: visible; }
-            #ticket-print {
-                display: block;
-                position: absolute; left: 0; top: 0; width: 58mm;
-                font-family: 'Courier New', Courier, monospace; font-size: 11px; padding: 2px; background: white; color: black;
-            }
-            .ticket-center { text-align: center; }
-            .ticket-line { border-bottom: 1px dashed #000; margin: 4px 0; }
-            .ticket-flex { display: flex; justify-content: space-between; }
+        /* Imprimante thermique 58mm - Noir absolu et ultra-net */
+    #ticket-print { display: none; }
+    @media print {
+        body * { visibility: hidden; }
+        #ticket-print, #ticket-print * { visibility: visible; }
+        #ticket-print {
+            display: block;
+            position: absolute; 
+            left: 0; 
+            top: 0; 
+            width: 58mm;
+            font-family: 'Courier New', Courier, monospace; 
+            font-size: 12px; 
+            font-weight: bold;
+            padding: 2px; 
+            background: #ffffff; 
+            color: #000000;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
         }
+        .ticket-center { text-align: center; }
+        .ticket-line { border-bottom: 1px dashed #000000; margin: 4px 0; }
+        .ticket-flex { display: flex; justify-content: space-between; }
+        strong { font-weight: 900; color: #000000; }
+    }
     </style>
 </head>
 <body>
