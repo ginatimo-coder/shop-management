@@ -120,7 +120,7 @@
                 </select>
             </div>
             <div class="form-group">
-                <label id="lblContactAddress">Adresse (ex: Kinshasa) :</label>
+                <label id="lblContactAddress">Adresse :</label>
                 <input type="text" id="contactAddress">
             </div>
         </div>
@@ -442,15 +442,22 @@
     async function loadData() {
         try {
             const statsRes = await fetch('/api/dashboard/stats');
-            const stats = await statsRes.json();
-            document.getElementById('statTodaySales').innerText = stats.today_sales;
-            document.getElementById('statSalesCount').innerText = stats.sales_count;
-            document.getElementById('statStockValue').innerText = stats.total_stock_value;
-            document.getElementById('statLowStock').innerText = stats.low_stock_count;
+            if (statsRes.ok) {
+                const stats = await statsRes.json();
+                document.getElementById('statTodaySales').innerText = stats.total_sales || 0;
+                document.getElementById('statSalesCount').innerText = stats.sales_count || 0;
+                document.getElementById('statStockValue').innerText = stats.total_stock_value || 0;
+                document.getElementById('statLowStock').innerText = stats.low_stock_count || 0;
+            }
 
-            // Chargement Contacts
             const contactRes = await fetch('/api/contacts');
-            allContacts = await contactRes.json();
+            if (contactRes.ok) {
+                const contactData = await contactRes.json();
+                allContacts = Array.isArray(contactData) ? contactData : [];
+            } else {
+                allContacts = [];
+            }
+
             const contactSelect = document.getElementById('saleContactSelect');
             contactSelect.innerHTML = `<option value="">-- ${currentLang === 'fr' ? 'Client Comptoir / Direct' : 'Direct Customer'} --</option>`;
             allContacts.filter(c => !c.is_supplier).forEach(c => {
@@ -458,7 +465,13 @@
             });
 
             const catRes = await fetch('/api/categories');
-            allCategories = await catRes.json();
+            if (catRes.ok) {
+                const catData = await catRes.json();
+                allCategories = Array.isArray(catData) ? catData : [];
+            } else {
+                allCategories = [];
+            }
+
             const catSelect = document.getElementById('partCategorySelect');
             catSelect.innerHTML = `<option value="">-- ${currentLang === 'fr' ? 'Sélectionner' : 'Select'} --</option>`;
             allCategories.forEach(c => {
@@ -466,7 +479,12 @@
             });
 
             const partsRes = await fetch('/api/parts');
-            allParts = await partsRes.json();
+            if (partsRes.ok) {
+                const partsData = await partsRes.json();
+                allParts = Array.isArray(partsData) ? partsData : [];
+            } else {
+                allParts = [];
+            }
             
             fillSaleSelect();
             filterAndSortParts();
@@ -524,7 +542,6 @@
         });
     }
 
-    // Enregistrement Contact
     document.getElementById('contactForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const contactData = {
@@ -634,7 +651,6 @@
         }
     });
 
-    // Validation Vente / Document
     document.getElementById('saleForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const partId = parseInt(document.getElementById('salePartSelect').value);
