@@ -5,11 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="pageTitle">Africa Motors & Co - Caisse & Gestion</title>
     <style>
-        /* Design Light & Clean */
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background: #f8f9fa; color: #212529; }
         .container { max-width: 1000px; margin: auto; background: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #e9ecef; }
         
-        /* En-tête professionnel */
         .shop-header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #0066cc; padding-bottom: 15px; }
         .shop-header h1 { margin: 0; color: #0066cc; font-size: 24px; text-transform: uppercase; }
         .shop-header p { margin: 5px 0 0; color: #6c757d; font-size: 14px; }
@@ -22,8 +20,8 @@
         .form-row .form-group { flex: 1; }
         
         label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 13px; color: #495057; }
-        input, select { width: 100%; padding: 9px; box-sizing: border-box; border: 1px solid #ced4da; border-radius: 4px; background: #fff; font-size: 14px; }
-        input:focus, select:focus { border-color: #0066cc; outline: none; box-shadow: 0 0 0 3px rgba(0,102,204,0.1); }
+        input, select, textarea { width: 100%; padding: 9px; box-sizing: border-box; border: 1px solid #ced4da; border-radius: 4px; background: #fff; font-size: 14px; }
+        input:focus, select:focus, textarea:focus { border-color: #0066cc; outline: none; box-shadow: 0 0 0 3px rgba(0,102,204,0.1); }
         
         button { background: #0066cc; color: white; border: none; padding: 10px 16px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 14px; transition: background 0.2s; }
         button:hover { background: #004999; }
@@ -34,24 +32,21 @@
         button.secondary { background: #6c757d; padding: 6px 10px; font-size: 12px; }
         button.secondary:hover { background: #5a6268; }
 
-        /* Tableaux */
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
         th, td { border: 1px solid #dee2e6; padding: 10px; text-align: left; }
         th { background: #f1f3f5; color: #495057; font-weight: 700; }
         tr:nth-child(even) { background: #f8f9fa; }
 
-        /* Dashboard Styles */
         .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 15px; }
         .card { background: #ffffff; border: 1px solid #e9ecef; border-left: 4px solid #0066cc; padding: 15px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
         .card.alert { border-left-color: #dc3545; }
         .card h3 { margin: 0 0 8px 0; font-size: 12px; text-transform: uppercase; color: #6c757d; font-weight: 700; }
         .card .value { font-size: 20px; font-weight: bold; color: #212529; }
 
-        /* Barre de recherche et filtres de tri */
         .toolbar { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .toolbar input, .toolbar select { max-width: 250px; }
 
-        /* Imprimante thermique 58mm - Noir net et contrasté */
+        /* Impression thermique 58mm noire nette */
         #ticket-print { display: none; }
         @media print {
             body * { visibility: hidden; }
@@ -101,6 +96,36 @@
             <div class="value" id="statLowStock">0</div>
         </div>
     </div>
+</div>
+
+<div class="container">
+    <h2 id="titleContact">📇 Gestion des Contacts (Clients & Fournisseurs)</h2>
+    <form id="contactForm">
+        <div class="form-row">
+            <div class="form-group">
+                <label id="lblContactName">Nom / Raison Sociale :</label>
+                <input type="text" id="contactName" required>
+            </div>
+            <div class="form-group">
+                <label id="lblContactPhone">Téléphone :</label>
+                <input type="text" id="contactPhone">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label id="lblContactType">Type de contact :</label>
+                <select id="contactType">
+                    <option value="client">Client</option>
+                    <option value="fournisseur">Fournisseur</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label id="lblContactAddress">Adresse (ex: Kinshasa) :</label>
+                <input type="text" id="contactAddress">
+            </div>
+        </div>
+        <button type="submit" id="btnSaveContact">Ajouter le contact</button>
+    </form>
 </div>
 
 <div class="container">
@@ -176,8 +201,24 @@
 </div>
 
 <div class="container">
-    <h2 id="titleSale">🛒 Caisse & Enregistrement de Vente</h2>
+    <h2 id="titleSale">🛒 Caisse & Documents (Devis / Facture / BL)</h2>
     <form id="saleForm">
+        <div class="form-row">
+            <div class="form-group">
+                <label id="lblSelectDocType">Type de document :</label>
+                <select id="documentType">
+                    <option value="facture">Facture / Invoice</option>
+                    <option value="devis">Devis / Quotation</option>
+                    <option value="bon_livraison">Bon de Livraison / Delivery Note</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label id="lblSelectContact">Client :</label>
+                <select id="saleContactSelect">
+                    <option value="">-- Client Comptoir / Direct --</option>
+                </select>
+            </div>
+        </div>
         <div class="form-row">
             <div class="form-group">
                 <label id="lblSelectPart">Sélectionner la pièce :</label>
@@ -202,7 +243,7 @@
                 </select>
             </div>
         </div>
-        <button type="submit" class="success" id="btnValidateSale">Valider la Vente & Imprimer le Ticket</button>
+        <button type="submit" class="success" id="btnValidateSale">Valider & Imprimer le Document</button>
     </form>
 </div>
 
@@ -234,15 +275,18 @@
     </table>
 </div>
 
-<!-- Ticket 58mm - Noir pur (monochrome optimisé impression thermique) -->
+<!-- Ticket 58mm - Noir net et professionnel -->
 <div id="ticket-print">
     <div class="ticket-center">
         <strong>AFRICA MOTORS & CO</strong><br>
         <span>1180, Blvd du Congo</span><br>
         <span>KINSHASA</span><br>
-        <span id="ticketTitle">REÇU DE VENTE</span><br>
+        <strong id="ticketDocTitle">FACTURE</strong><br>
+        <span id="ticket-doc-number"></span><br>
         <span id="ticket-date"></span>
     </div>
+    <div class="ticket-line"></div>
+    <div id="ticket-client" style="font-size: 10px; margin-bottom: 4px;"></div>
     <div class="ticket-line"></div>
     <div id="ticket-items"></div>
     <div class="ticket-line"></div>
@@ -260,6 +304,7 @@
     let currentLang = 'fr';
     let allParts = [];
     let allCategories = [];
+    let allContacts = [];
 
     const translations = {
         fr: {
@@ -269,6 +314,12 @@
             lblSalesCount: "Ventes du Jour",
             lblStockValue: "Valeur du Stock",
             lblLowStock: "Alertes Stock",
+            titleContact: "📇 Gestion des Contacts (Clients & Fournisseurs)",
+            lblContactName: "Nom / Raison Sociale :",
+            lblContactPhone: "Téléphone :",
+            lblContactType: "Type de contact :",
+            lblContactAddress: "Adresse :",
+            btnSaveContact: "Ajouter le contact",
             titleCategory: "🏷️ Gestion des Catégories",
             lblCatName: "Nom de la catégorie :",
             btnSaveCat: "Ajouter la catégorie",
@@ -285,14 +336,16 @@
             lblMinAlert: "Seuil d'alerte stock :",
             btnSavePart: "Enregistrer la pièce",
             btnCancelEdit: "Annuler",
-            titleSale: "🛒 Caisse & Enregistrement de Vente",
+            titleSale: "🛒 Caisse & Documents (Devis / Facture / BL)",
+            lblSelectDocType: "Type de document :",
+            lblSelectContact: "Client :",
             lblSelectPart: "Sélectionner la pièce :",
             lblSaleQty: "Quantité :",
             lblPaymentMethod: "Mode de paiement :",
-            btnValidateSale: "Valider la Vente & Imprimer le Ticket",
+            btnValidateSale: "Valider & Imprimer le Document",
             titleStockList: "📋 Catalogue, Tri et Gestion du Stock",
             thName: "Nom", thCat: "Catégorie", thRef: "Réf. Fabricant", thPrice: "Prix Vente", thStock: "Stock", thLoc: "Emplacement", thActions: "Actions",
-            ticketTitle: "REÇU DE VENTE", ticketTotalLabel: "TOTAL :", ticketFooter: "Merci pour votre visite !"
+            ticketTotalLabel: "TOTAL :", ticketFooter: "Merci pour votre visite !"
         },
         en: {
             pageTitle: "Africa Motors & Co - POS & Management",
@@ -301,6 +354,12 @@
             lblSalesCount: "Today's Sales",
             lblStockValue: "Stock Value",
             lblLowStock: "Low Stock Alerts",
+            titleContact: "📇 Contact Management (Clients & Suppliers)",
+            lblContactName: "Name / Company:",
+            lblContactPhone: "Phone:",
+            lblContactType: "Contact Type:",
+            lblContactAddress: "Address:",
+            btnSaveContact: "Add Contact",
             titleCategory: "🏷️ Category Management",
             lblCatName: "Category Name:",
             btnSaveCat: "Add Category",
@@ -317,14 +376,16 @@
             lblMinAlert: "Min Stock Alert:",
             btnSavePart: "Save Part",
             btnCancelEdit: "Cancel",
-            titleSale: "🛒 POS & Sale Processing",
+            titleSale: "🛒 POS & Documents (Quotation / Invoice / Delivery)",
+            lblSelectDocType: "Document Type:",
+            lblSelectContact: "Customer:",
             lblSelectPart: "Select Part:",
             lblSaleQty: "Quantity:",
             lblPaymentMethod: "Payment Method:",
-            btnValidateSale: "Validate Sale & Print Receipt",
+            btnValidateSale: "Validate & Print Document",
             titleStockList: "📋 Stock Catalog, Sorting & Management",
             thName: "Name", thCat: "Category", thRef: "Part Number", thPrice: "Sale Price", thStock: "Stock", thLoc: "Location", thActions: "Actions",
-            ticketTitle: "SALES RECEIPT", ticketTotalLabel: "TOTAL:", ticketFooter: "Thank you for your visit!"
+            ticketTotalLabel: "TOTAL:", ticketFooter: "Thank you for your visit!"
         }
     };
 
@@ -337,6 +398,12 @@
         document.getElementById('lblSalesCount').innerText = t.lblSalesCount;
         document.getElementById('lblStockValue').innerText = t.lblStockValue;
         document.getElementById('lblLowStock').innerText = t.lblLowStock;
+        document.getElementById('titleContact').innerText = t.titleContact;
+        document.getElementById('lblContactName').innerText = t.lblContactName;
+        document.getElementById('lblContactPhone').innerText = t.lblContactPhone;
+        document.getElementById('lblContactType').innerText = t.lblContactType;
+        document.getElementById('lblContactAddress').innerText = t.lblContactAddress;
+        document.getElementById('btnSaveContact').innerText = t.btnSaveContact;
         document.getElementById('titleCategory').innerText = t.titleCategory;
         document.getElementById('lblCatName').innerText = t.lblCatName;
         document.getElementById('btnSaveCat').innerText = t.btnSaveCat;
@@ -354,6 +421,8 @@
         document.getElementById('btnSavePart').innerText = t.btnSavePart;
         document.getElementById('btnCancelEdit').innerText = t.btnCancelEdit;
         document.getElementById('titleSale').innerText = t.titleSale;
+        document.getElementById('lblSelectDocType').innerText = t.lblSelectDocType;
+        document.getElementById('lblSelectContact').innerText = t.lblSelectContact;
         document.getElementById('lblSelectPart').innerText = t.lblSelectPart;
         document.getElementById('lblSaleQty').innerText = t.lblSaleQty;
         document.getElementById('lblPaymentMethod').innerText = t.lblPaymentMethod;
@@ -366,7 +435,6 @@
         document.getElementById('thStock').innerText = t.thStock;
         document.getElementById('thLoc').innerText = t.thLoc;
         document.getElementById('thActions').innerText = t.thActions;
-        document.getElementById('ticketTitle').innerText = t.ticketTitle;
         document.getElementById('ticketTotalLabel').innerText = t.ticketTotalLabel;
         document.getElementById('ticketFooter').innerText = t.ticketFooter;
     }
@@ -379,6 +447,15 @@
             document.getElementById('statSalesCount').innerText = stats.sales_count;
             document.getElementById('statStockValue').innerText = stats.total_stock_value;
             document.getElementById('statLowStock').innerText = stats.low_stock_count;
+
+            // Chargement Contacts
+            const contactRes = await fetch('/api/contacts');
+            allContacts = await contactRes.json();
+            const contactSelect = document.getElementById('saleContactSelect');
+            contactSelect.innerHTML = `<option value="">-- ${currentLang === 'fr' ? 'Client Comptoir / Direct' : 'Direct Customer'} --</option>`;
+            allContacts.filter(c => !c.is_supplier).forEach(c => {
+                contactSelect.innerHTML += `<option value="${c.id}">${c.name} ${c.phone ? '('+c.phone+')' : ''}</option>`;
+            });
 
             const catRes = await fetch('/api/categories');
             allCategories = await catRes.json();
@@ -447,6 +524,43 @@
         });
     }
 
+    // Enregistrement Contact
+    document.getElementById('contactForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const contactData = {
+            name: document.getElementById('contactName').value,
+            phone: document.getElementById('contactPhone').value,
+            address: document.getElementById('contactAddress').value,
+            is_supplier: document.getElementById('contactType').value === 'fournisseur',
+            is_professional: true
+        };
+        const res = await fetch('/api/contacts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(contactData)
+        });
+        if (res.ok) {
+            alert(currentLang === 'fr' ? 'Contact ajouté avec succès !' : 'Contact added successfully!');
+            document.getElementById('contactForm').reset();
+            loadData();
+        }
+    });
+
+    document.getElementById('categoryForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('categoryName').value;
+        const res = await fetch('/api/categories', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name })
+        });
+        if (res.ok) {
+            alert(currentLang === 'fr' ? 'Catégorie ajoutée !' : 'Category added!');
+            document.getElementById('categoryForm').reset();
+            loadData();
+        }
+    });
+
     function editPart(id) {
         const p = allParts.find(item => item.id === id);
         if (!p) return;
@@ -486,21 +600,6 @@
         }
     }
 
-    document.getElementById('categoryForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const name = document.getElementById('categoryName').value;
-        const res = await fetch('/api/categories', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name })
-        });
-        if (res.ok) {
-            alert(currentLang === 'fr' ? 'Catégorie ajoutée !' : 'Category added!');
-            document.getElementById('categoryForm').reset();
-            loadData();
-        }
-    });
-
     document.getElementById('partForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = document.getElementById('partId').value;
@@ -535,23 +634,28 @@
         }
     });
 
+    // Validation Vente / Document
     document.getElementById('saleForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const partId = parseInt(document.getElementById('salePartSelect').value);
         const quantity = parseInt(document.getElementById('saleQuantity').value);
         const paymentMethod = document.getElementById('paymentMethod').value;
+        const documentType = document.getElementById('documentType').value;
+        const contactId = document.getElementById('saleContactSelect').value ? parseInt(document.getElementById('saleContactSelect').value) : null;
 
         const selectedPart = allParts.find(p => p.id === partId);
         if (!selectedPart) return;
 
-        if (quantity > selectedPart.stock_quantity) {
-            alert(currentLang === 'fr' ? "Stock insuffisant !" : "Insufficient stock!");
+        if (documentType !== 'devis' && quantity > selectedPart.stock_quantity) {
+            alert(currentLang === 'fr' ? "Stock insuffisant pour ce document !" : "Insufficient stock for this document!");
             return;
         }
 
         const saleData = {
-            status: 'payé',
+            status: documentType === 'devis' ? 'devis' : 'payé',
             payment_method: paymentMethod,
+            document_type: documentType,
+            contact_id: contactId,
             items: [{ part_id: partId, quantity: quantity, unit_price: selectedPart.sale_price }]
         };
 
@@ -563,7 +667,14 @@
 
         const result = await response.json();
         if (response.ok) {
+            const docTitles = { devis: 'DEVIS', facture: 'FACTURE', bon_livraison: 'BON DE LIVRAISON' };
+            document.getElementById('ticketDocTitle').innerText = docTitles[documentType];
+            document.getElementById('ticket-doc-number').innerText = result.document_number;
             document.getElementById('ticket-date').innerText = new Date().toLocaleString();
+            
+            const selectedContact = allContacts.find(c => c.id === contactId);
+            document.getElementById('ticket-client').innerHTML = selectedContact ? `Client: ${selectedContact.name}` : `Client: Comptoir`;
+
             document.getElementById('ticket-items').innerHTML = `
                 <div>${selectedPart.name} (${selectedPart.part_number})</div>
                 <div class="ticket-flex">
