@@ -3,33 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="pageTitle">Caisse & Gestion de Pièces</title>
+    <title id="pageTitle">Africa Motors & Co - Caisse & Gestion</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f9; color: #333; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        .header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ddd; padding-bottom: 5px; margin-bottom: 15px; }
-        h2 { color: #0066cc; margin: 0; border: none; padding: 0; }
+        /* Design Light & Clean */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background: #f8f9fa; color: #212529; }
+        .container { max-width: 1000px; margin: auto; background: #ffffff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 20px; border: 1px solid #e9ecef; }
+        
+        /* En-tête professionnel */
+        .shop-header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #0066cc; padding-bottom: 15px; }
+        .shop-header h1 { margin: 0; color: #0066cc; font-size: 24px; text-transform: uppercase; }
+        .shop-header p { margin: 5px 0 0; color: #6c757d; font-size: 14px; }
+
+        .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        h2 { color: #0066cc; margin-top: 0; font-size: 18px; border-bottom: 1px solid #e9ecef; padding-bottom: 8px; }
+        
         .form-group { margin-bottom: 15px; }
-        .form-row { display: flex; gap: 10px; }
+        .form-row { display: flex; gap: 15px; }
         .form-row .form-group { flex: 1; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input, select { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        button { background: #0066cc; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; }
+        
+        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 13px; color: #495057; }
+        input, select { width: 100%; padding: 9px; box-sizing: border-box; border: 1px solid #ced4da; border-radius: 4px; background: #fff; font-size: 14px; }
+        input:focus, select:focus { border-color: #0066cc; outline: none; box-shadow: 0 0 0 3px rgba(0,102,204,0.1); }
+        
+        button { background: #0066cc; color: white; border: none; padding: 10px 16px; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 14px; transition: background 0.2s; }
         button:hover { background: #004999; }
         button.success { background: #28a745; }
         button.success:hover { background: #218838; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background: #f8f9fa; }
+        button.danger { background: #dc3545; padding: 6px 10px; font-size: 12px; }
+        button.danger:hover { background: #a71d2a; }
+        button.secondary { background: #6c757d; padding: 6px 10px; font-size: 12px; }
+        button.secondary:hover { background: #5a6268; }
+
+        /* Tableaux */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 13px; }
+        th, td { border: 1px solid #dee2e6; padding: 10px; text-align: left; }
+        th { background: #f1f3f5; color: #495057; font-weight: 700; }
+        tr:nth-child(even) { background: #f8f9fa; }
 
         /* Dashboard Styles */
-        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-        .card { background: linear-gradient(135deg, #0066cc, #004999); color: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .card.alert { background: linear-gradient(135deg, #dc3545, #a71d2a); }
-        .card h3 { margin: 0 0 10px 0; font-size: 13px; text-transform: uppercase; opacity: 0.9; color: white; }
-        .card .value { font-size: 22px; font-weight: bold; }
+        .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 15px; }
+        .card { background: #ffffff; border: 1px solid #e9ecef; border-left: 4px solid #0066cc; padding: 15px; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .card.alert { border-left-color: #dc3545; }
+        .card h3 { margin: 0 0 8px 0; font-size: 12px; text-transform: uppercase; color: #6c757d; font-weight: 700; }
+        .card .value { font-size: 20px; font-weight: bold; color: #212529; }
 
-        /* Imprimante thermique 58mm */
+        /* Barre de recherche et filtres de tri */
+        .toolbar { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .toolbar input, .toolbar select { max-width: 250px; }
+
+        /* Imprimante thermique 58mm - Noir net et contrasté */
         #ticket-print { display: none; }
         @media print {
             body * { visibility: hidden; }
@@ -37,10 +59,10 @@
             #ticket-print {
                 display: block;
                 position: absolute; left: 0; top: 0; width: 58mm;
-                font-family: 'Courier New', Courier, monospace; font-size: 12px; padding: 5px; background: white; color: black;
+                font-family: 'Courier New', Courier, monospace; font-size: 11px; padding: 2px; background: white; color: black;
             }
             .ticket-center { text-align: center; }
-            .ticket-line { border-bottom: 1px dashed #000; margin: 5px 0; }
+            .ticket-line { border-bottom: 1px dashed #000; margin: 4px 0; }
             .ticket-flex { display: flex; justify-content: space-between; }
         }
     </style>
@@ -48,8 +70,12 @@
 <body>
 
 <div class="container">
+    <div class="shop-header">
+        <h1>Africa Motors & Co</h1>
+        <p>1180, Blvd du Congo / KINSHASA</p>
+    </div>
     <div class="header-flex">
-        <h2 id="titleDashboard">📊 Tableau de Bord</h2>
+        <h2 id="titleDashboard" style="border:none; margin:0; padding:0;">📊 Tableau de Bord</h2>
         <div>
             <select id="langSelect" onchange="switchLanguage(this.value)" style="padding: 5px; font-weight: bold;">
                 <option value="fr">🇫🇷 Français</option>
@@ -89,8 +115,9 @@
 </div>
 
 <div class="container">
-    <h2 id="titlePart">📦 Ajouter une Pièce / Article</h2>
+    <h2 id="titlePart">📦 Ajouter ou Modifier une Pièce / Article</h2>
     <form id="partForm">
+        <input type="hidden" id="partId">
         <div class="form-row">
             <div class="form-group">
                 <label id="lblSku">SKU / Code-barres :</label>
@@ -144,6 +171,7 @@
             </div>
         </div>
         <button type="submit" id="btnSavePart">Enregistrer la pièce</button>
+        <button type="button" id="btnCancelEdit" style="background:#6c757d; display:none; margin-left: 10px;" onclick="resetPartForm()">Annuler</button>
     </form>
 </div>
 
@@ -179,7 +207,16 @@
 </div>
 
 <div class="container">
-    <h2 id="titleStockList">📋 Catalogue et Stock en Temps Réel</h2>
+    <h2 id="titleStockList">📋 Catalogue, Tri et Gestion du Stock</h2>
+    <div class="toolbar">
+        <input type="text" id="searchInput" onkeyup="filterAndSortParts()" placeholder="🔍 Rechercher par nom, SKU, référence...">
+        <select id="sortSelect" onchange="filterAndSortParts()">
+            <option value="name_asc">Trier par Nom (A-Z)</option>
+            <option value="stock_asc">Trier par Stock (Croissant)</option>
+            <option value="stock_desc">Trier par Stock (Décroissant)</option>
+            <option value="price_desc">Trier par Prix (Plus cher)</option>
+        </select>
+    </div>
     <table>
         <thead>
             <tr>
@@ -190,17 +227,20 @@
                 <th id="thPrice">Prix Vente</th>
                 <th id="thStock">Stock</th>
                 <th id="thLoc">Emplacement</th>
+                <th id="thActions">Actions</th>
             </tr>
         </thead>
         <tbody id="partsTableBody"></tbody>
     </table>
 </div>
 
-<!-- Ticket 58mm -->
+<!-- Ticket 58mm - Noir pur (monochrome optimisé impression thermique) -->
 <div id="ticket-print">
     <div class="ticket-center">
-        <strong id="ticketShopName">MAGASIN / SOGICO</strong><br>
-        <span id="ticketTitle">Reçu de Vente / Receipt</span><br>
+        <strong>AFRICA MOTORS & CO</strong><br>
+        <span>1180, Blvd du Congo</span><br>
+        <span>KINSHASA</span><br>
+        <span id="ticketTitle">REÇU DE VENTE</span><br>
         <span id="ticket-date"></span>
     </div>
     <div class="ticket-line"></div>
@@ -212,7 +252,7 @@
     </div>
     <div class="ticket-line"></div>
     <div class="ticket-center" id="ticketFooter">
-        Merci pour votre visite !<br>Thank you for your visit!
+        Merci pour votre visite !<br>Karibu sana!
     </div>
 </div>
 
@@ -223,7 +263,7 @@
 
     const translations = {
         fr: {
-            pageTitle: "Caisse & Gestion de Pièces",
+            pageTitle: "Africa Motors & Co - Caisse & Gestion",
             titleDashboard: "📊 Tableau de Bord",
             lblTodaySales: "CA du Jour",
             lblSalesCount: "Ventes du Jour",
@@ -232,7 +272,7 @@
             titleCategory: "🏷️ Gestion des Catégories",
             lblCatName: "Nom de la catégorie :",
             btnSaveCat: "Ajouter la catégorie",
-            titlePart: "📦 Ajouter une Pièce / Article",
+            titlePart: "📦 Ajouter ou Modifier une Pièce / Article",
             lblSku: "SKU / Code-barres :",
             lblPartName: "Nom de la pièce :",
             lblCategory: "Catégorie :",
@@ -244,17 +284,18 @@
             lblStockQty: "Quantité en stock :",
             lblMinAlert: "Seuil d'alerte stock :",
             btnSavePart: "Enregistrer la pièce",
+            btnCancelEdit: "Annuler",
             titleSale: "🛒 Caisse & Enregistrement de Vente",
             lblSelectPart: "Sélectionner la pièce :",
             lblSaleQty: "Quantité :",
             lblPaymentMethod: "Mode de paiement :",
             btnValidateSale: "Valider la Vente & Imprimer le Ticket",
-            titleStockList: "📋 Catalogue et Stock en Temps Réel",
-            thName: "Nom", thCat: "Catégorie", thRef: "Réf. Fabricant", thPrice: "Prix Vente", thStock: "Stock", thLoc: "Emplacement",
-            ticketTitle: "Reçu de Vente", ticketTotalLabel: "TOTAL :", ticketFooter: "Merci pour votre visite !"
+            titleStockList: "📋 Catalogue, Tri et Gestion du Stock",
+            thName: "Nom", thCat: "Catégorie", thRef: "Réf. Fabricant", thPrice: "Prix Vente", thStock: "Stock", thLoc: "Emplacement", thActions: "Actions",
+            ticketTitle: "REÇU DE VENTE", ticketTotalLabel: "TOTAL :", ticketFooter: "Merci pour votre visite !"
         },
         en: {
-            pageTitle: "POS & Parts Management",
+            pageTitle: "Africa Motors & Co - POS & Management",
             titleDashboard: "📊 Dashboard",
             lblTodaySales: "Today's Revenue",
             lblSalesCount: "Today's Sales",
@@ -263,7 +304,7 @@
             titleCategory: "🏷️ Category Management",
             lblCatName: "Category Name:",
             btnSaveCat: "Add Category",
-            titlePart: "📦 Add Part / Item",
+            titlePart: "📦 Add or Edit Part / Item",
             lblSku: "SKU / Barcode:",
             lblPartName: "Part Name:",
             lblCategory: "Category:",
@@ -275,14 +316,15 @@
             lblStockQty: "Stock Quantity:",
             lblMinAlert: "Min Stock Alert:",
             btnSavePart: "Save Part",
+            btnCancelEdit: "Cancel",
             titleSale: "🛒 POS & Sale Processing",
             lblSelectPart: "Select Part:",
             lblSaleQty: "Quantity:",
             lblPaymentMethod: "Payment Method:",
             btnValidateSale: "Validate Sale & Print Receipt",
-            titleStockList: "📋 Real-Time Stock & Catalog",
-            thName: "Name", thCat: "Category", thRef: "Part Number", thPrice: "Sale Price", thStock: "Stock", thLoc: "Location",
-            ticketTitle: "Sales Receipt", ticketTotalLabel: "TOTAL:", ticketFooter: "Thank you for your visit!"
+            titleStockList: "📋 Stock Catalog, Sorting & Management",
+            thName: "Name", thCat: "Category", thRef: "Part Number", thPrice: "Sale Price", thStock: "Stock", thLoc: "Location", thActions: "Actions",
+            ticketTitle: "SALES RECEIPT", ticketTotalLabel: "TOTAL:", ticketFooter: "Thank you for your visit!"
         }
     };
 
@@ -310,6 +352,7 @@
         document.getElementById('lblStockQty').innerText = t.lblStockQty;
         document.getElementById('lblMinAlert').innerText = t.lblMinAlert;
         document.getElementById('btnSavePart').innerText = t.btnSavePart;
+        document.getElementById('btnCancelEdit').innerText = t.btnCancelEdit;
         document.getElementById('titleSale').innerText = t.titleSale;
         document.getElementById('lblSelectPart').innerText = t.lblSelectPart;
         document.getElementById('lblSaleQty').innerText = t.lblSaleQty;
@@ -322,6 +365,7 @@
         document.getElementById('thPrice').innerText = t.thPrice;
         document.getElementById('thStock').innerText = t.thStock;
         document.getElementById('thLoc').innerText = t.thLoc;
+        document.getElementById('thActions').innerText = t.thActions;
         document.getElementById('ticketTitle').innerText = t.ticketTitle;
         document.getElementById('ticketTotalLabel').innerText = t.ticketTotalLabel;
         document.getElementById('ticketFooter').innerText = t.ticketFooter;
@@ -329,7 +373,6 @@
 
     async function loadData() {
         try {
-            // Stats Dashboard
             const statsRes = await fetch('/api/dashboard/stats');
             const stats = await statsRes.json();
             document.getElementById('statTodaySales').innerText = stats.today_sales;
@@ -337,7 +380,6 @@
             document.getElementById('statStockValue').innerText = stats.total_stock_value;
             document.getElementById('statLowStock').innerText = stats.low_stock_count;
 
-            // Categories
             const catRes = await fetch('/api/categories');
             allCategories = await catRes.json();
             const catSelect = document.getElementById('partCategorySelect');
@@ -346,35 +388,104 @@
                 catSelect.innerHTML += `<option value="${c.id}">${c.name}</option>`;
             });
 
-            // Parts
             const partsRes = await fetch('/api/parts');
             allParts = await partsRes.json();
-            const tbody = document.getElementById('partsTableBody');
-            const saleSelect = document.getElementById('salePartSelect');
             
-            tbody.innerHTML = '';
-            saleSelect.innerHTML = `<option value="">-- ${currentLang === 'fr' ? 'Choisir une pièce' : 'Choose a part'} --</option>`;
-
-            allParts.forEach(p => {
-                tbody.innerHTML += `
-                    <tr>
-                        <td><b>${p.sku}</b></td>
-                        <td>${p.name} ${p.brand_part ? '('+p.brand_part+')' : ''}</td>
-                        <td>${p.category_name || '-'}</td>
-                        <td>${p.part_number}</td>
-                        <td>${p.sale_price}</td>
-                        <td style="${p.stock_quantity <= p.min_stock_alert ? 'color: red; font-weight: bold;' : ''}">${p.stock_quantity}</td>
-                        <td>${p.location || '-'}</td>
-                    </tr>
-                `;
-                saleSelect.innerHTML += `<option value="${p.id}">${p.name} (Ref: ${p.part_number}) - Stock: ${p.stock_quantity} - ${p.sale_price}</option>`;
-            });
+            fillSaleSelect();
+            filterAndSortParts();
         } catch (err) {
             console.error("Erreur chargement:", err);
         }
     }
 
-    // Submit Catégorie
+    function fillSaleSelect() {
+        const saleSelect = document.getElementById('salePartSelect');
+        saleSelect.innerHTML = `<option value="">-- ${currentLang === 'fr' ? 'Choisir une pièce' : 'Choose a part'} --</option>`;
+        allParts.forEach(p => {
+            saleSelect.innerHTML += `<option value="${p.id}">${p.name} (Ref: ${p.part_number}) - Stock: ${p.stock_quantity} - ${p.sale_price}</option>`;
+        });
+    }
+
+    function filterAndSortParts() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const sortBy = document.getElementById('sortSelect').value;
+
+        let filtered = allParts.filter(p => 
+            p.name.toLowerCase().includes(searchTerm) || 
+            p.sku.toLowerCase().includes(searchTerm) || 
+            p.part_number.toLowerCase().includes(searchTerm) ||
+            (p.brand_part && p.brand_part.toLowerCase().includes(searchTerm))
+        );
+
+        filtered.sort((a, b) => {
+            if (sortBy === 'name_asc') return a.name.localeCompare(b.name);
+            if (sortBy === 'stock_asc') return a.stock_quantity - b.stock_quantity;
+            if (sortBy === 'stock_desc') return b.stock_quantity - a.stock_quantity;
+            if (sortBy === 'price_desc') return b.sale_price - a.sale_price;
+            return 0;
+        });
+
+        const tbody = document.getElementById('partsTableBody');
+        tbody.innerHTML = '';
+
+        filtered.forEach(p => {
+            tbody.innerHTML += `
+                <tr>
+                    <td><b>${p.sku}</b></td>
+                    <td>${p.name} ${p.brand_part ? '('+p.brand_part+')' : ''}</td>
+                    <td>${p.category_name || '-'}</td>
+                    <td>${p.part_number}</td>
+                    <td>${p.sale_price}</td>
+                    <td style="${p.stock_quantity <= p.min_stock_alert ? 'color: red; font-weight: bold;' : ''}">${p.stock_quantity}</td>
+                    <td>${p.location || '-'}</td>
+                    <td>
+                        <button class="secondary" onclick="editPart(${p.id})">✏️</button>
+                        <button class="danger" onclick="deletePart(${p.id})">🗑️</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    function editPart(id) {
+        const p = allParts.find(item => item.id === id);
+        if (!p) return;
+
+        document.getElementById('partId').value = p.id;
+        document.getElementById('sku').value = p.sku;
+        document.getElementById('partName').value = p.name;
+        document.getElementById('partCategorySelect').value = p.category_id || '';
+        document.getElementById('brandPart').value = p.brand_part || '';
+        document.getElementById('partNumber').value = p.part_number;
+        document.getElementById('location').value = p.location || '';
+        document.getElementById('purchasePrice').value = p.purchase_price;
+        document.getElementById('salePrice').value = p.sale_price;
+        document.getElementById('stockQuantity').value = p.stock_quantity;
+        document.getElementById('minStockAlert').value = p.min_stock_alert;
+
+        document.getElementById('btnSavePart').innerText = currentLang === 'fr' ? 'Modifier la pièce' : 'Update Part';
+        document.getElementById('btnCancelEdit').style.display = 'inline-block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetPartForm() {
+        document.getElementById('partForm').reset();
+        document.getElementById('partId').value = '';
+        document.getElementById('btnSavePart').innerText = currentLang === 'fr' ? 'Enregistrer la pièce' : 'Save Part';
+        document.getElementById('btnCancelEdit').style.display = 'none';
+    }
+
+    async function deletePart(id) {
+        if (!confirm(currentLang === 'fr' ? "Voulez-vous vraiment supprimer cette pièce ?" : "Are you sure you want to delete this part?")) return;
+        
+        const res = await fetch(`/api/parts/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            loadData();
+        } else {
+            alert(currentLang === 'fr' ? "Erreur lors de la suppression." : "Error deleting part.");
+        }
+    }
+
     document.getElementById('categoryForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const name = document.getElementById('categoryName').value;
@@ -390,9 +501,9 @@
         }
     });
 
-    // Submit Pièce
     document.getElementById('partForm').addEventListener('submit', async (e) => {
         e.preventDefault();
+        const id = document.getElementById('partId').value;
         const partData = {
             sku: document.getElementById('sku').value,
             name: document.getElementById('partName').value,
@@ -406,22 +517,24 @@
             min_stock_alert: parseInt(document.getElementById('minStockAlert').value)
         };
 
-        const res = await fetch('/api/parts', {
-            method: 'POST',
+        const url = id ? `/api/parts/${id}` : '/api/parts';
+        const method = id ? 'PUT' : 'POST';
+
+        const res = await fetch(url, {
+            method: method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(partData)
         });
 
         if (res.ok) {
-            alert(currentLang === 'fr' ? 'Pièce enregistrée avec succès !' : 'Part saved successfully!');
-            document.getElementById('partForm').reset();
+            alert(currentLang === 'fr' ? 'Opération réussie !' : 'Operation successful!');
+            resetPartForm();
             loadData();
         } else {
             alert(currentLang === 'fr' ? "Erreur lors de l'enregistrement." : "Error saving part.");
         }
     });
 
-    // Submit Vente
     document.getElementById('saleForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const partId = parseInt(document.getElementById('salePartSelect').value);
