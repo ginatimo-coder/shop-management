@@ -720,6 +720,80 @@
     });
 
     loadData();
+    <!-- Modèle de Document Professionnel (Format A4) -->
+<div id="document-print" style="display: none;">
+    <div class="doc-header">
+        <div class="doc-company">
+            <h2>AFRICA MOTORS & CO Sarl</h2>
+            <p>1180, Blvd du Congo / KINSHASA</p>
+            <p>RCCM: CD/KNG/... | Id. Nat.: ... | N° Impôt: ...</p>
+        </div>
+        <div class="doc-meta">
+            <h1 id="docTitleText" style="text-transform: uppercase; color: #0066cc; margin: 0; font-size: 22px;">DEVIS</h1>
+            <p><strong>N/Ref :</strong> <span id="printDocNumber"></span></p>
+            <p><strong>Date :</strong> <span id="printDate"></span></p>
+        </div>
+    </div>
+
+    <div class="doc-client-box">
+        <strong>Client :</strong><br>
+        <span id="printClientName" style="font-size: 15px; font-weight: bold;"></span><br>
+        <span id="printClientAddress"></span><br>
+        <span id="printClientPhone"></span>
+    </div>
+
+    <table class="doc-table">
+        <thead>
+            <tr>
+                <th>Références / Désignation</th>
+                <th>Qté</th>
+                <th>PU HT</th>
+                <th>TVA (%)</th>
+                <th>Total HT</th>
+            </tr>
+        </thead>
+        <tbody id="printDocItems">
+            <!-- Les articles s'inséreront ici dynamiquement -->
+        </tbody>
+    </table>
+
+    <div class="doc-totals">
+        <table style="width: 300px; float: right; margin-top: 15px;">
+            <tr>
+                <td><strong>Total HT :</strong></td>
+                <td id="printTotalHT" style="text-align: right;"></td>
+            </tr>
+            <tr>
+                <td><strong>Total TVA :</strong></td>
+                <td id="printTotalTVA" style="text-align: right;">0,00</td>
+            </tr>
+            <tr style="font-size: 16px; border-top: 2px solid #000;">
+                <td><strong>Total TTC :</strong></td>
+                <td id="printTotalTTC" style="text-align: right; font-weight: bold;"></td>
+            </tr>
+        </table>
+        <div style="clear: both;"></div>
+    </div>
+
+    <div class="doc-footer-info" style="margin-top: 40px; font-size: 12px;">
+        <p><strong>Conditions de règlement :</strong> À réception | <strong>Mode de paiement :</strong> <span id="printPaymentMethod">Cash</span></p>
+        <br><br>
+        <div style="display: flex; justify-content: space-between;">
+            <div>
+                <p>Merci de votre confiance.</p>
+            </div>
+            <div style="text-align: center;">
+                <p><strong>Nom, qualité et signature ou cachet du client :</strong></p>
+                <br><br>
+            </div>
+        </div>
+    </div>
+
+    <div class="doc-legal-footer" style="margin-top: 50px; text-align: center; font-size: 11px; border-top: 1px solid #ccc; padding-top: 10px;">
+        <p>E-mail: management@africamotors-co.com | Tel: (+243) ...</p>
+        <p>Adresse: 1180, Blvd du Congo, Kinshasa</p>
+    </div>
+</div>
 </script>
 
 </body>
