@@ -721,12 +721,12 @@
             return;
         }
 
-        const saleData = {
+      const saleData = {
             status: documentType === 'devis' ? 'devis' : 'payé',
             payment_method: paymentMethod,
             document_type: documentType,
             contact_id: contactId,
-            items: [{ part_id: partId, quantity: quantity, unit_profile: selectedPart.sale_price }]
+            items: [{ part_id: partId, quantity: quantity, unit_price: selectedPart.sale_price }] // <-- CORRIGÉ ICI (unit_price au lieu de unit_profile)
         };
 
         const response = await fetch('/api/sales', {
