@@ -46,31 +46,27 @@
         .toolbar { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .toolbar input, .toolbar select { max-width: 250px; }
 
-        /* Imprimante thermique 58mm - Noir absolu et ultra-net */
-    #ticket-print { display: none; }
-    @media print {
-        body * { visibility: hidden; }
-        #ticket-print, #ticket-print * { visibility: visible; }
-        #ticket-print {
-            display: block;
-            position: absolute; 
-            left: 0; 
-            top: 0; 
-            width: 58mm;
-            font-family: 'Courier New', Courier, monospace; 
-            font-size: 12px; 
-            font-weight: bold;
-            padding: 2px; 
-            background: #ffffff; 
-            color: #000000;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
+        /* Masqué par défaut sur l'écran */
+        #ticket-print, #document-print { display: none; }
+
+        /* Configuration Impression Pro (Format A4 ou Ticket) */
+        @media print {
+            body * { visibility: hidden; }
+            #document-print, #document-print * { visibility: visible; }
+            #document-print {
+                display: block !important;
+                position: absolute; left: 0; top: 0; width: 100%;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                font-size: 13px; color: #000000; background: #ffffff; padding: 20px;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .doc-header { display: flex; justify-content: space-between; border-bottom: 2px solid #0066cc; padding-bottom: 15px; margin-bottom: 20px; }
+            .doc-client-box { border: 1px solid #ccc; padding: 12px; border-radius: 4px; margin-bottom: 20px; background: #fdfdfd; }
+            .doc-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            .doc-table th, .doc-table td { border: 1px solid #000; padding: 8px; text-align: left; font-size: 12px; }
+            .doc-table th { background-color: #f1f1f1 !important; }
         }
-        .ticket-center { text-align: center; }
-        .ticket-line { border-bottom: 1px dashed #000000; margin: 4px 0; }
-        .ticket-flex { display: flex; justify-content: space-between; }
-        strong { font-weight: 900; color: #000000; }
-    }
     </style>
 </head>
 <body>
@@ -212,7 +208,7 @@
 </div>
 
 <div class="container">
-    <h2 id="titleSale">🛒 Caisse & Documents (Devis / Facture / BL)</h2>
+    <h2 id="titleSale">🛒 Caisse & Documents Pro (Devis / Facture / BL)</h2>
     <form id="saleForm">
         <div class="form-row">
             <div class="form-group">
@@ -246,15 +242,14 @@
             <div class="form-group">
                 <label id="lblPaymentMethod">Mode de paiement :</label>
                 <select id="paymentMethod">
-                    <option value="especes">Espèces / Cash</option>
+                    <option value="cash">Cash / Espèces</option>
                     <option value="carte">Carte bancaire / Card</option>
                     <option value="mobile_money">Mobile Money</option>
                     <option value="credit">Crédit / Credit</option>
-                    <option value="autre">Autre / Other</option>
                 </select>
             </div>
         </div>
-        <button type="submit" class="success" id="btnValidateSale">Valider & Imprimer le Document</button>
+        <button type="submit" class="success" id="btnValidateSale">Valider & Imprimer le Document Pro (A4)</button>
     </form>
 </div>
 
@@ -286,28 +281,80 @@
     </table>
 </div>
 
-<!-- Ticket 58mm - Noir net et professionnel -->
-<div id="ticket-print">
-    <div class="ticket-center">
-        <strong>AFRICA MOTORS & CO</strong><br>
-        <span>1180, Blvd du Congo</span><br>
-        <span>KINSHASA</span><br>
-        <strong id="ticketDocTitle">FACTURE</strong><br>
-        <span id="ticket-doc-number"></span><br>
-        <span id="ticket-date"></span>
+<!-- ========================================== -->
+<!-- MODÈLE DE DOCUMENT PRO (FORMAT A4)          -->
+<!-- ========================================== -->
+<div id="document-print">
+    <div class="doc-header">
+        <div>
+            <h2 style="margin:0; color:#0066cc; font-size: 20px;">AFRICA MOTORS & CO Sarl</h2>
+            <p style="margin:4px 0; font-size:11px; color:#555;">RCCM CD/KNG/17-B-00172 | Id. Nat. 01-9-N17347C | N° Impôt A 1712021 L</p>
+            <p style="margin:0; font-size:11px; color:#555;">1180, Blvd du Congo, Limete / KINSHASA</p>
+        </div>
+        <div style="text-align: right;">
+            <h1 id="docTitleText" style="text-transform: uppercase; color: #0066cc; margin: 0; font-size: 20px;">DEVIS</h1>
+            <p style="margin:4px 0; font-size:12px;"><strong>N/Ref :</strong> <span id="printDocNumber"></span></p>
+            <p style="margin:0; font-size:12px;"><strong>Date :</strong> <span id="printDate"></span></p>
+        </div>
     </div>
-    <div class="ticket-line"></div>
-    <div id="ticket-client" style="font-size: 10px; margin-bottom: 4px;"></div>
-    <div class="ticket-line"></div>
-    <div id="ticket-items"></div>
-    <div class="ticket-line"></div>
-    <div class="ticket-flex">
-        <span id="ticketTotalLabel">TOTAL :</span>
-        <strong id="ticket-total"></strong>
+
+    <div class="doc-client-box">
+        <span id="printClientName" style="font-size: 14px; font-weight: bold;"></span><br>
+        <span id="printClientAddress" style="font-size: 12px;"></span><br>
+        <span id="printClientPhone" style="font-size: 12px;"></span>
     </div>
-    <div class="ticket-line"></div>
-    <div class="ticket-center" id="ticketFooter">
-        Merci pour votre visite !<br>Karibu sana!
+
+    <table class="doc-table">
+        <thead>
+            <tr>
+                <th>Produits / Désignation</th>
+                <th style="text-align: center;">Qté</th>
+                <th style="text-align: right;">PU HT ($)</th>
+                <th style="text-align: center;">%TVA</th>
+                <th style="text-align: right;">Mtt HT ($)</th>
+            </tr>
+        </thead>
+        <tbody id="printDocItems">
+            <!-- Rempli dynamiquement -->
+        </tbody>
+    </table>
+
+    <div style="float: right; width: 280px; margin-top: 10px;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <tr>
+                <td style="border: 1px solid #000; padding: 6px;"><strong>Total USD HT</strong></td>
+                <td id="printTotalHT" style="border: 1px solid #000; padding: 6px; text-align: right;"></td>
+            </tr>
+            <tr>
+                <td style="border: 1px solid #000; padding: 6px;"><strong>Total TVA</strong></td>
+                <td style="border: 1px solid #000; padding: 6px; text-align: right;">0,00</td>
+            </tr>
+            <tr style="background: #f1f1f1;">
+                <td style="border: 1px solid #000; padding: 6px;"><strong>Total USD TTC</strong></td>
+                <td id="printTotalTTC" style="border: 1px solid #000; padding: 6px; text-align: right; font-weight: bold;"></td>
+            </tr>
+        </table>
+    </div>
+    <div style="clear: both;"></div>
+
+    <div style="margin-top: 40px; font-size: 12px;">
+        <p><strong>Cdts règlement :</strong> À réception | <strong>Mode de paiement :</strong> <span id="printPaymentMethod">cash</span></p>
+        <p><strong>Limite de validité :</strong> 30 jours</p>
+        
+        <div style="margin-top: 30px; display: flex; justify-content: space-between;">
+            <div>
+                <p>Merci de votre confiance.</p>
+            </div>
+            <div style="text-align: right; width: 250px;">
+                <p style="margin-bottom: 40px;">Bon pour accord le ..........................</p>
+                <p><strong>Nom, qualité et signature ou cachet du client</strong></p>
+            </div>
+        </div>
+    </div>
+
+    <div style="margin-top: 60px; text-align: center; font-size: 11px; border-top: 1px solid #ccc; padding-top: 10px; color: #555;">
+        <p>E-mail: management@africamotors-cd.com | Tel: (+243) 816630200 / 818102973</p>
+        <p>Adresse: 1180, Blvd du Congo, Kinshasa</p>
     </div>
 </div>
 
@@ -347,16 +394,15 @@
             lblMinAlert: "Seuil d'alerte stock :",
             btnSavePart: "Enregistrer la pièce",
             btnCancelEdit: "Annuler",
-            titleSale: "🛒 Caisse & Documents (Devis / Facture / BL)",
+            titleSale: "🛒 Caisse & Documents Pro (Devis / Facture / BL)",
             lblSelectDocType: "Type de document :",
             lblSelectContact: "Client :",
             lblSelectPart: "Sélectionner la pièce :",
             lblSaleQty: "Quantité :",
             lblPaymentMethod: "Mode de paiement :",
-            btnValidateSale: "Valider & Imprimer le Document",
+            btnValidateSale: "Valider & Imprimer le Document Pro (A4)",
             titleStockList: "📋 Catalogue, Tri et Gestion du Stock",
-            thName: "Nom", thCat: "Catégorie", thRef: "Réf. Fabricant", thPrice: "Prix Vente", thStock: "Stock", thLoc: "Emplacement", thActions: "Actions",
-            ticketTotalLabel: "TOTAL :", ticketFooter: "Merci pour votre visite !"
+            thName: "Nom", thCat: "Catégorie", thRef: "Réf. Fabricant", thPrice: "Prix Vente", thStock: "Stock", thLoc: "Emplacement", thActions: "Actions"
         },
         en: {
             pageTitle: "Africa Motors & Co - POS & Management",
@@ -387,16 +433,15 @@
             lblMinAlert: "Min Stock Alert:",
             btnSavePart: "Save Part",
             btnCancelEdit: "Cancel",
-            titleSale: "🛒 POS & Documents (Quotation / Invoice / Delivery)",
+            titleSale: "🛒 POS & Pro Documents (Quotation / Invoice / Delivery)",
             lblSelectDocType: "Document Type:",
             lblSelectContact: "Customer:",
             lblSelectPart: "Select Part:",
             lblSaleQty: "Quantity:",
             lblPaymentMethod: "Payment Method:",
-            btnValidateSale: "Validate & Print Document",
+            btnValidateSale: "Validate & Print Pro Document (A4)",
             titleStockList: "📋 Stock Catalog, Sorting & Management",
-            thName: "Name", thCat: "Category", thRef: "Part Number", thPrice: "Sale Price", thStock: "Stock", thLoc: "Location", thActions: "Actions",
-            ticketTotalLabel: "TOTAL:", ticketFooter: "Thank you for your visit!"
+            thName: "Name", thCat: "Category", thRef: "Part Number", thPrice: "Sale Price", thStock: "Stock", thLoc: "Location", thActions: "Actions"
         }
     };
 
@@ -446,8 +491,6 @@
         document.getElementById('thStock').innerText = t.thStock;
         document.getElementById('thLoc').innerText = t.thLoc;
         document.getElementById('thActions').innerText = t.thActions;
-        document.getElementById('ticketTotalLabel').innerText = t.ticketTotalLabel;
-        document.getElementById('ticketFooter').innerText = t.ticketFooter;
     }
 
     async function loadData() {
@@ -683,7 +726,7 @@
             payment_method: paymentMethod,
             document_type: documentType,
             contact_id: contactId,
-            items: [{ part_id: partId, quantity: quantity, unit_price: selectedPart.sale_price }]
+            items: [{ part_id: partId, quantity: quantity, unit_profile: selectedPart.sale_price }]
         };
 
         const response = await fetch('/api/sales', {
@@ -694,22 +737,37 @@
 
         const result = await response.json();
         if (response.ok) {
+            // Remplissage du document professionnel format A4
             const docTitles = { devis: 'DEVIS', facture: 'FACTURE', bon_livraison: 'BON DE LIVRAISON' };
-            document.getElementById('ticketDocTitle').innerText = docTitles[documentType];
-            document.getElementById('ticket-doc-number').innerText = result.document_number;
-            document.getElementById('ticket-date').innerText = new Date().toLocaleString();
-            
-            const selectedContact = allContacts.find(c => c.id === contactId);
-            document.getElementById('ticket-client').innerHTML = selectedContact ? `Client: ${selectedContact.name}` : `Client: Comptoir`;
+            document.getElementById('docTitleText').innerText = docTitles[documentType];
+            document.getElementById('printDocNumber').innerText = result.document_number;
+            document.getElementById('printDate').innerText = new Date().toLocaleDateString();
 
-            document.getElementById('ticket-items').innerHTML = `
-                <div>${selectedPart.name} (${selectedPart.part_number})</div>
-                <div class="ticket-flex">
-                    <span>${quantity} x ${selectedPart.sale_price}</span>
-                    <span><b>${quantity * selectedPart.sale_price}</b></span>
-                </div>
+            const selectedContact = allContacts.find(c => c.id === contactId);
+            if (selectedContact) {
+                document.getElementById('printClientName').innerText = selectedContact.name;
+                document.getElementById('printClientAddress').innerText = selectedContact.address || 'Kinshasa';
+                document.getElementById('printClientPhone').innerText = selectedContact.phone ? 'Tél : ' + selectedContact.phone : '';
+            } else {
+                document.getElementById('printClientName').innerText = 'CLIENT COMPTOIR';
+                document.getElementById('printClientAddress').innerText = 'Kinshasa';
+                document.getElementById('printClientPhone').innerText = '';
+            }
+
+            const totalMtt = (quantity * selectedPart.sale_price).toFixed(2);
+            document.getElementById('printDocItems').innerHTML = `
+                <tr>
+                    <td>[${selectedPart.sku}] ${selectedPart.name} ${selectedPart.brand_part ? '('+selectedPart.brand_part+')' : ''} - Réf: ${selectedPart.part_number}</td>
+                    <td style="text-align: center;">${quantity.toFixed(2)}</td>
+                    <td style="text-align: right;">${selectedPart.sale_price.toFixed(2)}</td>
+                    <td style="text-align: center;">0,00</td>
+                    <td style="text-align: right;">${totalMtt}</td>
+                </tr>
             `;
-            document.getElementById('ticket-total').innerText = result.total_amount;
+
+            document.getElementById('printTotalHT').innerText = totalMtt;
+            document.getElementById('printTotalTTC').innerText = totalMtt;
+            document.getElementById('printPaymentMethod').innerText = paymentMethod;
 
             window.print();
             document.getElementById('saleForm').reset();
@@ -720,80 +778,6 @@
     });
 
     loadData();
-    <!-- Modèle de Document Professionnel (Format A4) -->
-<div id="document-print" style="display: none;">
-    <div class="doc-header">
-        <div class="doc-company">
-            <h2>AFRICA MOTORS & CO Sarl</h2>
-            <p>1180, Blvd du Congo / KINSHASA</p>
-            <p>RCCM: CD/KNG/... | Id. Nat.: ... | N° Impôt: ...</p>
-        </div>
-        <div class="doc-meta">
-            <h1 id="docTitleText" style="text-transform: uppercase; color: #0066cc; margin: 0; font-size: 22px;">DEVIS</h1>
-            <p><strong>N/Ref :</strong> <span id="printDocNumber"></span></p>
-            <p><strong>Date :</strong> <span id="printDate"></span></p>
-        </div>
-    </div>
-
-    <div class="doc-client-box">
-        <strong>Client :</strong><br>
-        <span id="printClientName" style="font-size: 15px; font-weight: bold;"></span><br>
-        <span id="printClientAddress"></span><br>
-        <span id="printClientPhone"></span>
-    </div>
-
-    <table class="doc-table">
-        <thead>
-            <tr>
-                <th>Références / Désignation</th>
-                <th>Qté</th>
-                <th>PU HT</th>
-                <th>TVA (%)</th>
-                <th>Total HT</th>
-            </tr>
-        </thead>
-        <tbody id="printDocItems">
-            <!-- Les articles s'inséreront ici dynamiquement -->
-        </tbody>
-    </table>
-
-    <div class="doc-totals">
-        <table style="width: 300px; float: right; margin-top: 15px;">
-            <tr>
-                <td><strong>Total HT :</strong></td>
-                <td id="printTotalHT" style="text-align: right;"></td>
-            </tr>
-            <tr>
-                <td><strong>Total TVA :</strong></td>
-                <td id="printTotalTVA" style="text-align: right;">0,00</td>
-            </tr>
-            <tr style="font-size: 16px; border-top: 2px solid #000;">
-                <td><strong>Total TTC :</strong></td>
-                <td id="printTotalTTC" style="text-align: right; font-weight: bold;"></td>
-            </tr>
-        </table>
-        <div style="clear: both;"></div>
-    </div>
-
-    <div class="doc-footer-info" style="margin-top: 40px; font-size: 12px;">
-        <p><strong>Conditions de règlement :</strong> À réception | <strong>Mode de paiement :</strong> <span id="printPaymentMethod">Cash</span></p>
-        <br><br>
-        <div style="display: flex; justify-content: space-between;">
-            <div>
-                <p>Merci de votre confiance.</p>
-            </div>
-            <div style="text-align: center;">
-                <p><strong>Nom, qualité et signature ou cachet du client :</strong></p>
-                <br><br>
-            </div>
-        </div>
-    </div>
-
-    <div class="doc-legal-footer" style="margin-top: 50px; text-align: center; font-size: 11px; border-top: 1px solid #ccc; padding-top: 10px;">
-        <p>E-mail: management@africamotors-co.com | Tel: (+243) ...</p>
-        <p>Adresse: 1180, Blvd du Congo, Kinshasa</p>
-    </div>
-</div>
 </script>
 
 </body>
