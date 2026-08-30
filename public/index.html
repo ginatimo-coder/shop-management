@@ -46,10 +46,8 @@
         .toolbar { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .toolbar input, .toolbar select { max-width: 250px; }
 
-        /* Masqué par défaut sur l'écran */
         #ticket-print, #document-print { display: none; }
 
-        /* Configuration Impression Pro (Format A4 ou Ticket) */
         @media print {
             body * { visibility: hidden; }
             #document-print, #document-print * { visibility: visible; }
@@ -551,7 +549,8 @@
         const saleSelect = document.getElementById('salePartSelect');
         saleSelect.innerHTML = `<option value="">-- ${currentLang === 'fr' ? 'Choisir une pièce' : 'Choose a part'} --</option>`;
         allParts.forEach(p => {
-            saleSelect.innerHTML += `<option value="${p.id}">${p.name} (Ref: ${p.part_number}) - Stock: ${p.stock_quantity} - ${p.sale_price}</option>`;
+            const priceNum = parseFloat(p.sale_price) || 0;
+            saleSelect.innerHTML += `<option value="${p.id}">${p.name} (Ref: ${p.part_number}) - Stock: ${p.stock_quantity} - $${priceNum.toFixed(2)}</option>`;
         });
     }
 
@@ -570,7 +569,7 @@
             if (sortBy === 'name_asc') return a.name.localeCompare(b.name);
             if (sortBy === 'stock_asc') return a.stock_quantity - b.stock_quantity;
             if (sortBy === 'stock_desc') return b.stock_quantity - a.stock_quantity;
-            if (sortBy === 'price_desc') return b.sale_price - a.sale_price;
+            if (sortBy === 'price_desc') return parseFloat(b.sale_price) - parseFloat(a.sale_price);
             return 0;
         });
 
@@ -578,13 +577,14 @@
         tbody.innerHTML = '';
 
         filtered.forEach(p => {
+            const priceNum = parseFloat(p.sale_price) || 0;
             tbody.innerHTML += `
                 <tr>
                     <td><b>${p.sku}</b></td>
                     <td>${p.name} ${p.brand_part ? '('+p.brand_part+')' : ''}</td>
                     <td>${p.category_name || '-'}</td>
                     <td>${p.part_number}</td>
-                    <td>${p.sale_price}</td>
+                    <td>$${priceNum.toFixed(2)}</td>
                     <td style="${p.stock_quantity <= p.min_stock_alert ? 'color: red; font-weight: bold;' : ''}">${p.stock_quantity}</td>
                     <td>${p.location || '-'}</td>
                     <td>
@@ -721,12 +721,14 @@
             return;
         }
 
-      const saleData = {
+        const unitPrice = parseFloat(selectedPart.sale_price) || 0;
+
+        const saleData = {
             status: documentType === 'devis' ? 'devis' : 'payé',
             payment_method: paymentMethod,
             document_type: documentType,
             contact_id: contactId,
-            items: [{ part_id: partId, quantity: quantity, unit_price: selectedPart.sale_price }] // <-- CORRIGÉ ICI (unit_price au lieu de unit_profile)
+            items: [{ part_id: partId, quantity: quantity, unit_price: unitPrice }]
         };
 
         const response = await fetch('/api/sales', {
@@ -737,7 +739,6 @@
 
         const result = await response.json();
         if (response.ok) {
-            // Remplissage du document professionnel format A4
             const docTitles = { devis: 'DEVIS', facture: 'FACTURE', bon_livraison: 'BON DE LIVRAISON' };
             document.getElementById('docTitleText').innerText = docTitles[documentType];
             document.getElementById('printDocNumber').innerText = result.document_number;
@@ -754,12 +755,12 @@
                 document.getElementById('printClientPhone').innerText = '';
             }
 
-            const totalMtt = (quantity * selectedPart.sale_price).toFixed(2);
+            const totalMtt = (quantity * unitPrice).toFixed(2);
             document.getElementById('printDocItems').innerHTML = `
                 <tr>
                     <td>[${selectedPart.sku}] ${selectedPart.name} ${selectedPart.brand_part ? '('+selectedPart.brand_part+')' : ''} - Réf: ${selectedPart.part_number}</td>
                     <td style="text-align: center;">${quantity.toFixed(2)}</td>
-                    <td style="text-align: right;">${selectedPart.sale_price.toFixed(2)}</td>
+                    <td style="text-align: right;">${unitPrice.toFixed(2)}</td>
                     <td style="text-align: center;">0,00</td>
                     <td style="text-align: right;">${totalMtt}</td>
                 </tr>
